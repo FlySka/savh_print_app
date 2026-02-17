@@ -1,0 +1,15 @@
+[Unit]
+Description=SAVH Print App - API (FastAPI)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/path/to/savh_print_app
+EnvironmentFile=/path/to/savh_print_app/.env
+ExecStart=/usr/bin/env bash -lc 'poetry run uvicorn print_server.app.main:app --host ${HOST:-127.0.0.1} --port ${PORT:-8000}'
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+

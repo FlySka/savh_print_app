@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: savh-print-app
+    metrics_path: /metrics
+    static_configs:
+      # Si Prometheus corre en Docker Desktop (Windows) y la app corre en el host:
+      - targets: ["host.docker.internal:8000"]
+
