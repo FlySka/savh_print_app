@@ -1,8 +1,9 @@
 @echo off
 setlocal
 
-REM Wrapper para usar scripts\windows\savh.ps1 desde la ruta "scripts".
+REM Wrapper para ejecutar savh.ps1 sin pelear con ExecutionPolicy.
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0windows\savh.ps1" %*
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0savh.ps1" %*
 
 endlocal
+

@@ -47,6 +47,19 @@ Estado de soporte: la app se mantiene **solo para Windows 10/11** (nativo). Las 
 - Para imprimir en Windows: SumatraPDF instalado y una impresora configurada
 - Credenciales de Google (Service Account) con acceso de lectura al Google Sheet
 
+**Configurar SumatraPDF (impresión)**
+
+1) Instala SumatraPDF (versión clásica/installer) y deja la ruta, por ejemplo:
+   `C:\Program Files\SumatraPDF\SumatraPDF.exe`
+2) Define en `.env`:
+   - `SUMATRA_PATH=C:\\Program Files\\SumatraPDF\\SumatraPDF.exe`
+   - `PRINTER_NAME=Nombre de tu impresora` (tal como aparece en Panel de Control > Impresoras).
+3) (Opcional) Prueba manual desde PowerShell para validar:
+   ```powershell
+   & "C:\Program Files\SumatraPDF\SumatraPDF.exe" -print-to "Nombre de tu impresora" -print-settings duplexdefault test.pdf
+   ```
+   Si imprime, el `print_worker` podrá hacerlo. Si falla, revisa ruta, nombre exacto de la impresora o drivers.
+
 ---
 
 ### Variables de entorno (`.env`)
@@ -112,10 +125,10 @@ Script recomendado (crea logs en `data/logs/` y pids en `data/pids/`):
 PowerShell:
 
 ```powershell
-scripts\savh.ps1 start -Reload
-scripts\savh.ps1 status
-scripts\savh.ps1 logs
-scripts\savh.ps1 stop
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\savh.ps1 start -Reload
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\savh.ps1 status
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\savh.ps1 logs
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\savh.ps1 stop
 ```
 
 CMD:
@@ -166,12 +179,17 @@ Para “Subir PDF”, el endpoint deja el job directamente en `READY` y el `prin
 
 ---
 
-### Logs y monitoreo (sugerencias)
+### Logs y monitoreo
 
 **Ver logs**
 
-- `scripts\savh.ps1 logs` o `scripts\savh.cmd logs` (últimos logs)
-- Mejor UX: abrir `data/logs/*.log` con tu viewer favorito (por ej. `lnav` o Notepad++)
+- `scripts\savh.ps1 logs` taila simultáneamente los 3 servicios. Si no ves líneas, espera a que se emitan; corta con `Ctrl+C` antes de borrar archivos.
+- Cada servicio escribe stdout+stderr al mismo archivo con timestamp:
+  - API: `data/logs/app_YYYYMMDD_HHMMSS.log`
+  - generate_worker: `data/logs/worker_generate_YYYYMMDD_HHMMSS.log`
+  - print_worker: `data/logs/worker_print_YYYYMMDD_HHMMSS.log`
+- `scripts\savh.ps1 stop` usa `taskkill /T` para matar árbol (incluye `uvicorn --reload` y watchfiles) y limpia pidfiles. Si un log no se deja borrar, cierra cualquier `savh.ps1 logs`, corre `stop` y reintenta.
+- Mejor UX: abrir `data/logs/*.log` con tu viewer favorito (por ej. `lnav` o Notepad++).
 
 **Monitoreo “simple”**
 
@@ -215,37 +233,32 @@ nssm set savh-api AppRotateBytes 10485760
 
 Script listo:
 
-- `scripts/windows/nssm_install.bat` (edita `REPO_DIR` y `POETRY_EXE`, luego ejecútalo como Admin)
+- `scripts/nssm_install.bat` (edita `REPO_DIR` y `POETRY_EXE`, luego ejecútalo como Admin)
 
 **B) Métricas Prometheus + Grafana**
 
-Ya está implementado el hook, pero es opcional:
+El hook ya está en `printing_queue.infra.observability.instrument_fastapi_if_enabled` y la dependencia está en `pyproject.toml`. Solo actívalo:
 
-1) Instala la dependencia:
-
-```bash
-poetry add prometheus-fastapi-instrumentator
-```
-
-2) Habilita en `.env`:
+1) Habilita en `.env`:
 
 ```env
 ENABLE_METRICS=true
 METRICS_PATH=/metrics
 ```
 
-3) Levanta Prometheus + Grafana (Docker Desktop):
+2) Levanta Prometheus + Grafana (Docker Desktop):
 
 ```bash
 docker compose -f monitoring/docker-compose.yml up -d
 ```
 
-4) URLs:
+3) URLs:
 
 - Prometheus: `http://localhost:9090`
 - Grafana: `http://localhost:3000` (admin/admin)
 
-Prometheus hace scrape a `host.docker.internal:8000` por defecto (ver `monitoring/prometheus.yml`).
+4) Prometheus ya scrapea `host.docker.internal:8000` (ver `monitoring/prometheus.yml`). Ajusta el puerto si cambias `PORT` en `.env`.
+5) En Grafana, crea un datasource Prometheus apuntando a `http://prometheus:9090` (dentro del compose) y agrega dashboards para las métricas de FastAPI/Instrumentator expuestas en `/metrics`.
 
 **C) Sentry para errores (API + workers)**
 

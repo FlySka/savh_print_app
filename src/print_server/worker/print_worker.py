@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import time
 from datetime import datetime
 from pathlib import Path
@@ -125,12 +126,17 @@ def run_worker() -> None:
     """Loop principal: toma jobs READY y los imprime."""
     init_sentry("print_worker")
     logger.info(f"Worker iniciado, buscando jobs para imprimir...")
+    heartbeat_seconds = int(os.getenv("WORKER_HEARTBEAT_SECONDS", "60"))
+    last_heartbeat = time.monotonic()
     while True:
         db = SessionLocal()
         try:
             job = _claim_next_job(db)
             if not job:
-                # logger.info(f"Sin jobs READY; sleep {settings.POLL_SECONDS}s")
+                now = time.monotonic()
+                if heartbeat_seconds > 0 and (now - last_heartbeat) >= heartbeat_seconds:
+                    logger.info(f"Sin jobs READY; sleep {settings.POLL_SECONDS}s")
+                    last_heartbeat = now
                 time.sleep(settings.POLL_SECONDS)
                 continue
 

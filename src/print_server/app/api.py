@@ -106,4 +106,3 @@ def get_job(job_id: int, db: Session = Depends(get_db)) -> dict[str, Any]:
         "printed_at": job.printed_at.isoformat() if job.printed_at else None,
         "error_msg": job.error_msg,
     }
-
