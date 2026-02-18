@@ -1,40 +1,35 @@
-[project]
-name = "savh-print-app"
-version = "0.1.0"
-description = "App para crear e imprimir lista de pedidos (para repartidor) y guias de despacho."
-authors = [
-    {name = "Joaquin Farias",email = "joaquinfarias109@gmail.com"}
-]
-readme = "README.md"
-requires-python = ">=3.10,<4.0"
-dependencies = [
-    "fastapi[standard] (>=0.129.0,<0.130.0)",
-    "uvicorn[standard] (>=0.40.0,<0.41.0)",
-    "sqlalchemy (>=2.0.46,<3.0.0)",
-    "psycopg[binary] (>=3.3.2,<4.0.0)",
-    "pydantic-settings (>=2.12.0,<3.0.0)",
-    "jinja2 (>=3.1.6,<4.0.0)",
-    "python-multipart (>=0.0.22,<0.0.23)",
-    "python-dotenv (>=1.2.1,<2.0.0)",
-    "tomli (>=2.4.0,<3.0.0)",
-    "google-api-python-client (>=2.190.0,<3.0.0)",
-    "google-auth (>=2.48.0,<3.0.0)",
-    "pandas (>=2.0,<3.0)",
-    "numpy (>=1.24,<3.0)",
-    "reportlab (>=4.4.10,<5.0.0) ; python_version < \"4.0\"",
-    "loguru (==0.7.3)",
-    "prometheus-fastapi-instrumentator (>=7.1.0,<8.0.0)",
-    "sentry-sdk (>=2.53.0,<3.0.0)"
-]
-
-
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
+name = "savh-print-app"
+version = "0.1.0"
+description = "App para crear e imprimir lista de pedidos (para repartidor) y guias de despacho."
+authors = ["Joaquin Farias <joaquinfarias109@gmail.com>"]
+readme = "README.md"
 packages = [
   { include = "print_server", from = "src" },
   { include = "create_prints_server", from = "src" },
   { include = "printing_queue", from = "src" }
 ]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<4.0"
+fastapi = { extras = ["standard"], version = ">=0.129.0,<0.130.0" }
+uvicorn = { extras = ["standard"], version = ">=0.40.0,<0.41.0" }
+sqlalchemy = ">=2.0.46,<3.0.0"
+psycopg = { extras = ["binary"], version = ">=3.3.2,<4.0.0" }
+pydantic-settings = ">=2.12.0,<3.0.0"
+jinja2 = ">=3.1.6,<4.0.0"
+python-multipart = ">=0.0.22,<0.0.23"
+python-dotenv = ">=1.2.1,<2.0.0"
+tomli = ">=2.4.0,<3.0.0"
+google-api-python-client = ">=2.190.0,<3.0.0"
+google-auth = ">=2.48.0,<3.0.0"
+pandas = ">=2.0,<3.0"
+numpy = ">=1.24,<3.0"
+reportlab = ">=4.4.10,<5.0.0"
+loguru = "0.7.3"
+prometheus-fastapi-instrumentator = ">=7.1.0,<8.0.0"
+sentry-sdk = ">=2.53.0,<3.0.0"

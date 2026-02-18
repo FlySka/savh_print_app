@@ -8,6 +8,8 @@ Monolito modular en Python que:
   - `generate_worker`: lee Google Sheets y genera PDFs
   - `print_worker`: imprime PDFs en Windows usando SumatraPDF
 
+Estado de soporte: la app se mantiene **solo para Windows 10/11** (nativo). Las instrucciones Linux/WSL quedan como referencia histórica y ya no se prueban.
+
 ---
 
 ### Componentes
@@ -49,7 +51,7 @@ Monolito modular en Python que:
 
 ### Variables de entorno (`.env`)
 
-Este repo **requiere** un `.env` para funcionar. Hay un ejemplo en `.env.example`.
+Este repo **requiere** un `.env` para funcionar. Usa `.env.example.windows` como base; el ejemplo Linux queda solo como referencia legacy.
 
 Variables principales:
 
@@ -64,8 +66,7 @@ Variables principales:
 
 Notas:
 
-- Si corres en Windows “nativo”, puedes usar un `.env` con paths Windows (ver `.env_windows` como referencia local).
-- Si corres en Linux/WSL, usa paths Linux (ej. `/mnt/c/...`), porque `Path("C:\\...")` no existe en Linux.
+- Paths deben ser Windows (ej. `C:\\Users\\...\\data\\uploads`). El uso con WSL no está soportado.
 
 ---
 
@@ -84,11 +85,20 @@ psql "${DATABASE_URL/+psycopg/}" -f scripts/init_db.sql
 
 ---
 
-### Instalación
+### Instalación (Windows)
 
-```bash
+PowerShell:
+
+```powershell
 poetry install
-cp .env.example .env
+Copy-Item .env.example.windows .env
+```
+
+CMD:
+
+```bat
+poetry install
+copy .env.example.windows .env
 ```
 
 Completa `.env` con tus valores.
@@ -99,26 +109,25 @@ Completa `.env` con tus valores.
 
 Script recomendado (crea logs en `data/logs/` y pids en `data/pids/`):
 
-```bash
-scripts/savh.sh start --reload
+PowerShell:
+
+```powershell
+scripts\savh.ps1 start -Reload
+scripts\savh.ps1 status
+scripts\savh.ps1 logs
+scripts\savh.ps1 stop
 ```
 
-En Windows (PowerShell / CMD):
+CMD:
 
 ```bat
-scripts\windows\savh.cmd start -Reload
-scripts\windows\savh.cmd status
-scripts\windows\savh.cmd logs
-scripts\windows\savh.cmd stop
+scripts\savh.cmd start -Reload
+scripts\savh.cmd status
+scripts\savh.cmd logs
+scripts\savh.cmd stop
 ```
 
-Otros comandos:
-
-```bash
-scripts/savh.sh status
-scripts/savh.sh logs
-scripts/savh.sh stop
-```
+Nota: `scripts/savh.sh` queda como legacy para entornos Linux/WSL (no soportado).
 
 Web:
 
@@ -161,8 +170,8 @@ Para “Subir PDF”, el endpoint deja el job directamente en `READY` y el `prin
 
 **Ver logs**
 
-- `scripts/savh.sh logs` (tail de los últimos logs generados)
-- Mejor UX: instalar `lnav` y abrir `data/logs/*.log`
+- `scripts\savh.ps1 logs` o `scripts\savh.cmd logs` (últimos logs)
+- Mejor UX: abrir `data/logs/*.log` con tu viewer favorito (por ej. `lnav` o Notepad++)
 
 **Monitoreo “simple”**
 
@@ -261,66 +270,6 @@ SENTRY_ENVIRONMENT=prod
 SENTRY_TRACES_SAMPLE_RATE=0.05
 SENTRY_PROFILES_SAMPLE_RATE=0
 ```
-
----
-
-### Probar primero en WSL (simil “serio”)
-
-La forma más rápida de probar en WSL es correr todo “a mano” y ver logs con `lnav`/`tail`. Luego, si quieres “servicios”, usa systemd.
-
-**A) Run manual (rápido)**
-
-1) Instala deps:
-
-```bash
-poetry install
-```
-
-2) Ten Postgres corriendo y ejecuta el init (si aplica):
-
-```bash
-psql "${DATABASE_URL/+psycopg/}" -f scripts/init_db.sql
-```
-
-3) Levanta API + workers con el script (logs en `data/logs/`):
-
-```bash
-scripts/savh.sh start --reload
-scripts/savh.sh logs
-```
-
-**B) Systemd en WSL (servicios)**
-
-1) Copia units y ajusta paths:
-
-- `scripts/wsl/systemd/savh-api.service`
-- `scripts/wsl/systemd/savh-worker-generate.service`
-- `scripts/wsl/systemd/savh-worker-print.service`
-
-En cada archivo cambia:
-
-- `WorkingDirectory=/path/to/savh_print_app`
-- `EnvironmentFile=/path/to/savh_print_app/.env`
-
-2) Instala units:
-
-```bash
-sudo cp scripts/wsl/systemd/savh-*.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now savh-api savh-worker-generate savh-worker-print
-```
-
-3) Ver estado/logs:
-
-```bash
-systemctl status savh-api
-journalctl -u savh-api -f
-```
-
-Notas:
-
-- Para que systemd funcione en WSL, debes tenerlo habilitado (según tu versión/configuración de WSL).
-- `print_worker` en WSL solo sirve si tu `.env` apunta a un `SUMATRA_PATH` que exista desde WSL (por ejemplo `/mnt/c/Program Files/SumatraPDF/SumatraPDF.exe`) y una impresora válida.
 
 ---
 
