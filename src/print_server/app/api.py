@@ -11,6 +11,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sqlalchemy.orm import Session
 
 from printing_queue.db import get_db
+from printing_queue.infra.job_status_events import try_record_print_job_status_event
 from printing_queue.models import PrintJob, PrintJobStatus, PrintJobType
 from print_server.config.settings import settings
 
@@ -54,6 +55,14 @@ def enqueue_guides(db: Session = Depends(get_db)) -> dict[str, Any]:
     db.add(job)
     db.commit()
     db.refresh(job)
+    try_record_print_job_status_event(
+        db,
+        job_id=job.id,
+        from_status=None,
+        to_status=job.status,
+        occurred_at=job.created_at,
+        source="api",
+    )
     return {"id": job.id, "status": job.status.value, "job_type": job.job_type.value}
 
 
@@ -86,6 +95,14 @@ async def enqueue_upload(
     db.add(job)
     db.commit()
     db.refresh(job)
+    try_record_print_job_status_event(
+        db,
+        job_id=job.id,
+        from_status=None,
+        to_status=job.status,
+        occurred_at=job.created_at,
+        source="api",
+    )
     return {"id": job.id, "status": job.status.value, "job_type": job.job_type.value}
 
 

@@ -15,7 +15,24 @@ services:
     container_name: savh-grafana
     ports:
       - "3000:3000"
+    depends_on:
+      - prometheus
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      # Postgres datasource provisioning (para dashboards de tiempos por status).
+      # Valores recomendados si Postgres corre en el host:
+      #   GRAFANA_PG_HOST=host.docker.internal
+      #   GRAFANA_PG_PORT=5432
+      #   GRAFANA_PG_DB=savh_jobs_print
+      #   GRAFANA_PG_USER=postgres
+      #   GRAFANA_PG_PASSWORD=...
+      - GRAFANA_PG_HOST=${GRAFANA_PG_HOST:-host.docker.internal}
+      - GRAFANA_PG_PORT=${GRAFANA_PG_PORT:-5432}
+      - GRAFANA_PG_DB=${GRAFANA_PG_DB:-savh_jobs_print}
+      - GRAFANA_PG_USER=${GRAFANA_PG_USER:-postgres}
+      - GRAFANA_PG_PASSWORD=${GRAFANA_PG_PASSWORD:-}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     restart: unless-stopped

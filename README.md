@@ -260,6 +260,8 @@ docker compose -f monitoring/docker-compose.yml up -d
 4) Prometheus ya scrapea `host.docker.internal:8000` (ver `monitoring/prometheus.yml`). Ajusta el puerto si cambias `PORT` en `.env`.
 5) En Grafana, crea un datasource Prometheus apuntando a `http://prometheus:9090` (dentro del compose) y agrega dashboards para las métricas de FastAPI/Instrumentator expuestas en `/metrics`.
 
+> Nota: además de las métricas del instrumentator, la app expone `http_requests_by_status_total` (labels `handler`, `method`, `status`) para poder graficar tasa de errores (4xx/5xx).
+
 **C) Sentry para errores (API + workers)**
 
 Ya está implementado el hook, pero es opcional:

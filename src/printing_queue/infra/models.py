@@ -4,7 +4,7 @@ import enum
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, Integer, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import ENUM as PGEnum
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -76,3 +76,58 @@ class PrintJob(Base):
 
     error_msg: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+
+class PrintJobStatusEvent(Base):
+    """Evento de cambio de estado de un job.
+
+    Se usa para auditoría y para poder calcular tiempos entre estados en
+    dashboards (Grafana/SQL).
+
+    Nota:
+        Este modelo no requiere migración sobre `printing.print_jobs` porque es
+        una tabla nueva. `Base.metadata.create_all(...)` la crea si no existe.
+    """
+
+    __tablename__ = "print_job_status_events"
+    __table_args__ = {"schema": "printing"}
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    job_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("printing.print_jobs.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    from_status: Mapped[PrintJobStatus | None] = mapped_column(
+        PGEnum(
+            PrintJobStatus,
+            name="print_job_status",
+            schema="printing",
+            create_type=False,
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+            validate_strings=True,
+        ),
+        nullable=True,
+    )
+
+    to_status: Mapped[PrintJobStatus] = mapped_column(
+        PGEnum(
+            PrintJobStatus,
+            name="print_job_status",
+            schema="printing",
+            create_type=False,
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+            validate_strings=True,
+        ),
+        nullable=False,
+    )
+
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=False),
+        nullable=False,
+        default=datetime.now,
+        index=True,
+    )
+
+    source: Mapped[str | None] = mapped_column(String(50), nullable=True)

@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from printing_queue.db import get_db
+from printing_queue.infra.job_status_events import try_record_print_job_status_event
 from printing_queue.models import PrintJob, PrintJobStatus, PrintJobType
 
 DocKind = Literal["shipping_list", "guides", "both"]
@@ -77,6 +78,14 @@ def enqueue_generate(
     db.add(job)
     db.commit()
     db.refresh(job)
+    try_record_print_job_status_event(
+        db,
+        job_id=job.id,
+        from_status=None,
+        to_status=job.status,
+        occurred_at=job.created_at,
+        source="api",
+    )
 
     return EnqueueGenerateResponse(
         id=job.id,

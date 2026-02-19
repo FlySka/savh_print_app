@@ -5,6 +5,9 @@ from typing import Any
 
 _SENTRY_CONFIGURED = False
 _METRICS_CONFIGURED = False
+_HTTP_STATUS_METRICS_CONFIGURED = False
+
+_HTTP_REQUESTS_BY_STATUS_TOTAL: Any | None = None
 
 
 def _truthy(value: str | None) -> bool:
@@ -85,6 +88,8 @@ def instrument_fastapi_if_enabled(app: Any) -> None:
 
     Es *opcional* y no debe romper si no está instalado el instrumentator.
     """
+    global _HTTP_REQUESTS_BY_STATUS_TOTAL
+    global _HTTP_STATUS_METRICS_CONFIGURED
     global _METRICS_CONFIGURED
     if _METRICS_CONFIGURED:
         return
@@ -109,3 +114,67 @@ def instrument_fastapi_if_enabled(app: Any) -> None:
         # no romper el arranque si algo falla en métricas
         return
 
+    # Métrica adicional con `status` para poder graficar tasa de errores (4xx/5xx).
+    # El instrumentator expone histogramas/contadores de latencia, pero dependiendo
+    # de la config puede no incluir status codes como label.
+    if _HTTP_STATUS_METRICS_CONFIGURED:
+        return
+
+    try:
+        from prometheus_client import Counter
+    except Exception:
+        return
+
+    if _HTTP_REQUESTS_BY_STATUS_TOTAL is None:
+        try:
+            # Nombre específico para evitar colisiones con otras instrumentaciones.
+            _HTTP_REQUESTS_BY_STATUS_TOTAL = Counter(
+                "http_requests_by_status_total",
+                "Total HTTP requests by handler/method/status.",
+                labelnames=("handler", "method", "status"),
+            )
+        except Exception:
+            _HTTP_REQUESTS_BY_STATUS_TOTAL = None
+
+    if _HTTP_REQUESTS_BY_STATUS_TOTAL is None:
+        return
+
+    def _extract_handler(request: Any) -> str:
+        scope = getattr(request, "scope", None) or {}
+        route = scope.get("route")
+        handler = getattr(route, "path", None) or scope.get("path") or ""
+        if isinstance(handler, str) and handler.startswith("/static"):
+            return "/static"
+        return handler if isinstance(handler, str) and handler else ""
+
+    @app.middleware("http")
+    async def _prometheus_http_status_middleware(request: Any, call_next: Any) -> Any:
+        try:
+            response = await call_next(request)
+        except Exception:
+            # Si falla antes de responder, igual intenta contar como 500.
+            handler = _extract_handler(request) or getattr(getattr(request, "url", None), "path", "") or ""
+            if handler and handler != endpoint:
+                try:
+                    _HTTP_REQUESTS_BY_STATUS_TOTAL.labels(
+                        handler=handler,
+                        method=getattr(request, "method", ""),
+                        status="500",
+                    ).inc()
+                except Exception:
+                    pass
+            raise
+
+        handler = _extract_handler(request) or getattr(getattr(request, "url", None), "path", "") or ""
+        if handler and handler != endpoint:
+            try:
+                _HTTP_REQUESTS_BY_STATUS_TOTAL.labels(
+                    handler=handler,
+                    method=getattr(request, "method", ""),
+                    status=str(getattr(response, "status_code", "")),
+                ).inc()
+            except Exception:
+                pass
+        return response
+
+    _HTTP_STATUS_METRICS_CONFIGURED = True

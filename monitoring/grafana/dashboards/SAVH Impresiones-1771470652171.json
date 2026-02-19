@@ -1,0 +1,813 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 0,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "afdnd0xjgrri8f"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "timezone": [
+          "America/Santiago"
+        ],
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afdnd0xjgrri8f"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum(rate(http_request_duration_seconds_count{job=\"savh-print-app\", handler!~\"^/(metrics|static)$\"}[1m]))",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "total",
+          "range": true,
+          "refId": "RPS"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afdnd0xjgrri8f"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum by (handler) (rate(http_request_duration_seconds_count{job=\"savh-print-app\", handler!~\"^/(metrics|static)$\"}[5m]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{handler}}",
+          "range": true,
+          "refId": "RPS por handler"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afdnd0xjgrri8f"
+          },
+          "editorMode": "code",
+          "expr": "sum by (status) (rate(http_requests_by_status_total{job=\"savh-print-app\", handler!~\"^/(metrics|static)$\"}[5m]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{status}}",
+          "range": true,
+          "refId": "RPS por status"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afdnd0xjgrri8f"
+          },
+          "editorMode": "code",
+          "expr": "100 * sum(rate(http_requests_by_status_total{job=\"savh-print-app\", status=~\"5..\", handler!~\"^/(metrics|static)$\"}[5m])) / sum(rate(http_requests_by_status_total{job=\"savh-print-app\", handler!~\"^/(metrics|static)$\"}[5m]))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "% errores 5xx"
+        }
+      ],
+      "title": "Throughput",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "afdnd0xjgrri8f"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.3",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(increase(http_request_duration_seconds_count{job=\"savh-print-app\", handler!~\"^/(metrics|static)$\"}[1m]))",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "Requests por minuto"
+        }
+      ],
+      "title": "Request",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "afdnd0xjgrri8f"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.3",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "1000 * histogram_quantile(0.50, sum by (le) (rate(http_request_duration_highr_seconds_bucket{job=\"savh-print-app\"}[1m])))",
+          "instant": false,
+          "interval": "",
+          "legendFormat": "p50",
+          "range": true,
+          "refId": "p50"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afdnd0xjgrri8f"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "1000 * histogram_quantile(0.95, sum by (le) (rate(http_request_duration_highr_seconds_bucket{job=\"savh-print-app\"}[1m])))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "p95",
+          "range": true,
+          "refId": "p95"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afdnd0xjgrri8f"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "1000 * histogram_quantile(0.99, sum by (le) (rate(http_request_duration_highr_seconds_bucket{job=\"savh-print-app\"}[1m])))",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "p99",
+          "range": true,
+          "refId": "p99"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "afdnd0xjgrri8f"
+          },
+          "editorMode": "code",
+          "expr": "1000 * sum(rate(http_request_duration_seconds_sum{job=\"savh-print-app\", handler!~\"^/(metrics|static)$\"}[5m])) / clamp_min(sum(rate(http_request_duration_seconds_count{job=\"savh-print-app\", handler!~\"^/(metrics|static)$\"}[5m])), 1e-9)",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "promedio",
+          "range": true,
+          "refId": "promedio"
+        }
+      ],
+      "title": "Latencia (p50/p95/p99)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "afdnd0xjgrri8f"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 7
+      },
+      "id": 2,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "12.3.3",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "100 *\r\n(\r\n  sum(increase(http_requests_total{job=\"savh-print-app\", status=~\"5..\", handler!~\"^/(metrics|static)$\"}[$__range]))\r\n  or vector(0)\r\n)\r\n/\r\nclamp_min(\r\n  (sum(increase(http_requests_total{job=\"savh-print-app\", handler!~\"^/(metrics|static)$\"}[$__range])) or vector(0)),\r\n  1\r\n)\r\n",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "Error rate (%) 5xx"
+        }
+      ],
+      "title": "Error rate (5xx) %",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afdo08wh8h1xcf"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.3",
+      "targets": [
+        {
+          "dataset": "savh_jobs_print",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "afdo08wh8h1xcf"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "WITH e AS (\r\n  SELECT\r\n    occurred_at,\r\n    from_status,\r\n    to_status,\r\n    lag(occurred_at) OVER (PARTITION BY job_id ORDER BY occurred_at) AS prev_at\r\n  FROM printing.print_job_status_events\r\n  WHERE (occurred_at AT TIME ZONE 'America/Santiago') BETWEEN $__timeFrom() AND $__timeTo()\r\n)\r\nSELECT\r\n  date_trunc('minute', occurred_at AT TIME ZONE 'America/Santiago') AS time,\r\n  'pending → generating' AS metric,\r\n  avg(extract(epoch from (occurred_at - prev_at))) AS value\r\nFROM e\r\nWHERE prev_at IS NOT NULL\r\n  AND from_status = 'pending'\r\n  AND to_status = 'generating'\r\nGROUP BY 1\r\nORDER BY 1;\r\n",
+          "refId": "pending → generating (avg)",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "dataset": "savh_jobs_print",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "afdo08wh8h1xcf"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "WITH e AS (\r\n  SELECT\r\n    occurred_at,\r\n    from_status,\r\n    to_status,\r\n    lag(occurred_at) OVER (PARTITION BY job_id ORDER BY occurred_at) AS prev_at\r\n  FROM printing.print_job_status_events\r\n  WHERE (occurred_at AT TIME ZONE 'America/Santiago') BETWEEN $__timeFrom() AND $__timeTo()\r\n)\r\nSELECT\r\n  date_trunc('minute', occurred_at AT TIME ZONE 'America/Santiago') AS time,\r\n  'generating → ready' AS metric,\r\n  avg(extract(epoch from (occurred_at - prev_at))) AS value\r\nFROM e\r\nWHERE prev_at IS NOT NULL\r\n  AND from_status = 'generating'\r\n  AND to_status = 'ready'\r\nGROUP BY 1\r\nORDER BY 1;\r\n",
+          "refId": "generating → ready  (avg)",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "dataset": "savh_jobs_print",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "afdo08wh8h1xcf"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "WITH e AS (\r\n  SELECT\r\n    occurred_at,\r\n    from_status,\r\n    to_status,\r\n    lag(occurred_at) OVER (PARTITION BY job_id ORDER BY occurred_at) AS prev_at\r\n  FROM printing.print_job_status_events\r\n  WHERE (occurred_at AT TIME ZONE 'America/Santiago') BETWEEN $__timeFrom() AND $__timeTo()\r\n)\r\nSELECT\r\n  date_trunc('minute', occurred_at AT TIME ZONE 'America/Santiago') AS time,\r\n  'ready → printing' AS metric,\r\n  avg(extract(epoch from (occurred_at - prev_at))) AS value\r\nFROM e\r\nWHERE prev_at IS NOT NULL\r\n  AND from_status = 'ready'\r\n  AND to_status = 'printing'\r\nGROUP BY 1\r\nORDER BY 1;\r\n",
+          "refId": "ready → printing  (avg)",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "dataset": "savh_jobs_print",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "afdo08wh8h1xcf"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "WITH e AS (\r\n  SELECT\r\n    occurred_at,\r\n    from_status,\r\n    to_status,\r\n    lag(occurred_at) OVER (PARTITION BY job_id ORDER BY occurred_at) AS prev_at\r\n  FROM printing.print_job_status_events\r\n  WHERE (occurred_at AT TIME ZONE 'America/Santiago') BETWEEN $__timeFrom() AND $__timeTo()\r\n)\r\nSELECT\r\n  date_trunc('minute', occurred_at AT TIME ZONE 'America/Santiago') AS time,\r\n  'printing → done' AS metric,\r\n  avg(extract(epoch from (occurred_at - prev_at))) AS value\r\nFROM e\r\nWHERE prev_at IS NOT NULL\r\n  AND from_status = 'printing'\r\n  AND to_status = 'done'\r\nGROUP BY 1\r\nORDER BY 1;\r\n",
+          "refId": "printing → done  (avg)",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Tiempo Cambio de Estatus (avg)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "afdnd0xjgrri8f"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "id": 5,
+      "options": {
+        "displayMode": "gradient",
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "maxVizHeight": 300,
+        "minVizHeight": 16,
+        "minVizWidth": 8,
+        "namePlacement": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
+      },
+      "pluginVersion": "12.3.3",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "topk(5, sum by (handler) (rate(http_request_duration_seconds_count{job=\"savh-print-app\", handler!~\"^/(metrics|static)$\"}[5m])))",
+          "format": "time_series",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "Top 5 handlers por RPS"
+        }
+      ],
+      "title": "Top 5 handlers por RPS",
+      "type": "bargauge"
+    }
+  ],
+  "preload": false,
+  "refresh": "30s",
+  "schemaVersion": 42,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "definition": "query_result(label_values(http_request_duration_seconds_count{job=\"savh-print-app\", handler!~\"^/(metrics|static)$\"}, handler))",
+        "includeAll": true,
+        "label": "handler",
+        "multi": true,
+        "name": "handler",
+        "options": [],
+        "query": {
+          "qryType": 3,
+          "query": "query_result(label_values(http_request_duration_seconds_count{job=\"savh-print-app\", handler!~\"^/(metrics|static)$\"}, handler))",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "definition": "query_result(label_values(http_request_duration_seconds_count{job=\"savh-print-app\", handler!~\"^/(metrics|static)$\"}, method))",
+        "includeAll": true,
+        "label": "method",
+        "multi": true,
+        "name": "method",
+        "options": [],
+        "query": {
+          "qryType": 3,
+          "query": "query_result(label_values(http_request_duration_seconds_count{job=\"savh-print-app\", handler!~\"^/(metrics|static)$\"}, method))",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "SAVH Impresiones",
+  "uid": "adjfkhs",
+  "version": 19
+}

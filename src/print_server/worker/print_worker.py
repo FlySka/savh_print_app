@@ -10,9 +10,10 @@ from print_server.infra.logging import get_logger
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from printing_queue.db import SessionLocal
+from printing_queue.db import SessionLocal, engine
+from printing_queue.infra.job_status_events import try_record_print_job_status_event
 from printing_queue.infra.observability import capture_exception, init_sentry
-from printing_queue.models import PrintJob, PrintJobStatus
+from printing_queue.models import Base, PrintJob, PrintJobStatus
 from print_server.infra.printer import print_pdf_windows_sumatra
 from print_server.config.settings import settings
 
@@ -59,10 +60,20 @@ def _claim_next_job(db: Session) -> PrintJob | None:
         return None
 
     logger.info(f"Job READY reclamado id={job.id}")
+    prev_status = job.status
+    changed_at = datetime.now()
     job.status = PrintJobStatus.PRINTING
-    job.updated_at = datetime.now()
+    job.updated_at = changed_at
     db.commit()
     db.refresh(job)
+    try_record_print_job_status_event(
+        db,
+        job_id=job.id,
+        from_status=prev_status,
+        to_status=job.status,
+        occurred_at=changed_at,
+        source="print_worker",
+    )
     return job
 
 
@@ -74,12 +85,22 @@ def _mark_done(db: Session, job: PrintJob, payload_extra: dict[str, Any]) -> Non
         job (PrintJob): Job a actualizar.
         payload_extra (dict[str, Any]): Datos a mezclar en payload.
     """
+    prev_status = job.status
+    changed_at = datetime.now()
     job.status = PrintJobStatus.DONE
-    job.updated_at = datetime.now()
-    job.printed_at = datetime.now()
+    job.updated_at = changed_at
+    job.printed_at = changed_at
     job.error_msg = None
     job.payload = {**(job.payload or {}), **payload_extra}
     db.commit()
+    try_record_print_job_status_event(
+        db,
+        job_id=job.id,
+        from_status=prev_status,
+        to_status=job.status,
+        occurred_at=changed_at,
+        source="print_worker",
+    )
     logger.info(f"Job impreso OK id={job.id} archivos={payload_extra.get('printed_files')}")
 
 
@@ -91,10 +112,20 @@ def _mark_error(db: Session, job: PrintJob, err: Exception) -> None:
         job (PrintJob): Job a actualizar.
         err (Exception): Error ocurrido.
     """
+    prev_status = job.status
+    changed_at = datetime.now()
     job.status = PrintJobStatus.ERROR
-    job.updated_at = datetime.now()
+    job.updated_at = changed_at
     job.error_msg = str(err)
     db.commit()
+    try_record_print_job_status_event(
+        db,
+        job_id=job.id,
+        from_status=prev_status,
+        to_status=job.status,
+        occurred_at=changed_at,
+        source="print_worker",
+    )
     capture_exception(err)
     logger.exception(f"Job fallido id={job.id}")
 
@@ -125,6 +156,7 @@ def _print_files(files: list[str]) -> list[str]:
 def run_worker() -> None:
     """Loop principal: toma jobs READY y los imprime."""
     init_sentry("print_worker")
+    Base.metadata.create_all(bind=engine)
     logger.info(f"Worker iniciado, buscando jobs para imprimir...")
     heartbeat_seconds = int(os.getenv("WORKER_HEARTBEAT_SECONDS", "60"))
     last_heartbeat = time.monotonic()

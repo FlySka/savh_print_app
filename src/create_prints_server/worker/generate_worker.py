@@ -10,9 +10,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from create_prints_server.app.generator import NoOrdersForDateError, generate_pdfs
-from printing_queue.db import SessionLocal
+from printing_queue.db import SessionLocal, engine
+from printing_queue.infra.job_status_events import try_record_print_job_status_event
 from printing_queue.infra.observability import capture_exception, init_sentry
-from printing_queue.models import PrintJob, PrintJobStatus, PrintJobType
+from printing_queue.models import Base, PrintJob, PrintJobStatus, PrintJobType
 from printing_queue.settings import settings
 
 
@@ -42,10 +43,20 @@ def _claim_next_job(db: Session) -> PrintJob | None:
         return None
 
     logger.info(f"Job reclamado para generación id={job.id}")
+    prev_status = job.status
+    changed_at = datetime.now()
     job.status = PrintJobStatus.GENERATING
-    job.updated_at = datetime.now()
+    job.updated_at = changed_at
     db.commit()
     db.refresh(job)
+    try_record_print_job_status_event(
+        db,
+        job_id=job.id,
+        from_status=prev_status,
+        to_status=job.status,
+        occurred_at=changed_at,
+        source="generate_worker",
+    )
     return job
 
 
@@ -96,25 +107,55 @@ def _process_job(db: Session, job: PrintJob) -> None:
             "orders_count": artifacts.orders_count,
             "files": files,
         }
+        prev_status = job.status
+        changed_at = datetime.now()
         job.status = PrintJobStatus.READY
-        job.updated_at = datetime.now()
+        job.updated_at = changed_at
         job.error_msg = None
         db.commit()
+        try_record_print_job_status_event(
+            db,
+            job_id=job.id,
+            from_status=prev_status,
+            to_status=job.status,
+            occurred_at=changed_at,
+            source="generate_worker",
+        )
         logger.info(f"Job listo id={job.id} orders={artifacts.orders_count} files={files}")
 
     except NoOrdersForDateError as e:
         job.payload = {**payload, "orders_count": 0, "files": [], "note": str(e)}
+        prev_status = job.status
+        changed_at = datetime.now()
         job.status = PrintJobStatus.DONE
-        job.updated_at = datetime.now()
+        job.updated_at = changed_at
         job.error_msg = None
         db.commit()
+        try_record_print_job_status_event(
+            db,
+            job_id=job.id,
+            from_status=prev_status,
+            to_status=job.status,
+            occurred_at=changed_at,
+            source="generate_worker",
+        )
         logger.info(f"Job sin ventas id={job.id}: {e}")
 
     except Exception as e:
+        prev_status = job.status
+        changed_at = datetime.now()
         job.status = PrintJobStatus.ERROR
         job.error_msg = str(e)
-        job.updated_at = datetime.now()
+        job.updated_at = changed_at
         db.commit()
+        try_record_print_job_status_event(
+            db,
+            job_id=job.id,
+            from_status=prev_status,
+            to_status=job.status,
+            occurred_at=changed_at,
+            source="generate_worker",
+        )
         capture_exception(e)
         logger.exception(f"Error generando job_id={job.id}")
 
@@ -122,6 +163,7 @@ def _process_job(db: Session, job: PrintJob) -> None:
 def run_worker() -> None:
     """Loop principal: toma jobs PENDING (generación) y los deja READY."""
     init_sentry("generate_worker")
+    Base.metadata.create_all(bind=engine)
     logger.info(f"Worker iniciado, buscando jobs para generar...")
     heartbeat_seconds = int(os.getenv("WORKER_HEARTBEAT_SECONDS", "60"))
     last_heartbeat = time.monotonic()
