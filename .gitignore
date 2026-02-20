@@ -220,6 +220,7 @@ pyrightconfig.json
 
 ### VisualStudioCode ###
 .vscode/*
+.vscode/settings.json
 
 # Local History for Visual Studio Code
 .history/
