@@ -114,9 +114,15 @@ def generate_pdfs(
         logo_path=os.getenv("LOGO_PATH") or None,
     )
 
+    # Ajusta nombres de archivo por fecha y, si es egreso, cambia nombre base de guías.
+    guides_base = out_cfg.pdf_guides_path
+    if what == "egreso":
+        p = Path(out_cfg.pdf_guides_path)
+        guides_base = str(p.with_name("guides_egreso.pdf"))
+
     out_cfg = OutputConfig(
         pdf_orders_path=_dated_path(out_cfg.pdf_orders_path, day),
-        pdf_guides_path=_dated_path(out_cfg.pdf_guides_path, day),
+        pdf_guides_path=_dated_path(guides_base, day),
         title=out_cfg.title,
         subtitle=out_cfg.subtitle,
         max_items=out_cfg.max_items,
@@ -198,7 +204,8 @@ def generate_pdfs(
         logger.info(f"Lista de despacho generada en {shipping_path}")
 
     if what in ("guides", "both", "egreso"):
-        render_guides_pdf(guides, out_cfg, out_cfg.pdf_guides_path)
+        guide_title = "GUIA DE EGRESO" if what == "egreso" else "GUIA DE DESPACHO"
+        render_guides_pdf(guides, out_cfg, out_cfg.pdf_guides_path, guide_title=guide_title)
         guides_path = out_cfg.pdf_guides_path
         logger.info(f"Guías generadas en {guides_path}")
 

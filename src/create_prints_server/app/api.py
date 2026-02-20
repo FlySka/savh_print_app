@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 
+from create_prints_server.domain.money import money_clp
 from create_prints_server.domain.orders import build_daily_orders
 from create_prints_server.infra.google_sheets import sheet_to_df
 from printing_queue.db import get_db
@@ -175,6 +176,8 @@ class EgresoOption(BaseModel):
     venta_id: str
     label: str
     cliente: str
+    total: int
+    total_fmt: str
     destinatario: str | None = None
 
 
@@ -202,17 +205,21 @@ def list_egresos(day: date | None = None) -> list[EgresoOption]:
         r0 = g.iloc[0]
         cliente = str(r0.get("nombre", "") or r0.get("cliente", "") or "")
         destinatario = str(r0.get("destinatario", "") or "")
-        label_parts = [f"#{venta_id}"]
-        if destinatario:
-            label_parts.append(destinatario)
-        if cliente and cliente != destinatario:
-            label_parts.append(cliente)
-        label = " - ".join(label_parts)
+        total_venta = (
+            int(g["precio_total"].sum(skipna=True)) if "precio_total" in g.columns else 0
+        )
+
+        label_cliente = destinatario or cliente or ""
+        label_total = money_clp(total_venta)
+        label = f"{label_cliente} | {label_total}".strip(" |")
+
         options.append(
             EgresoOption(
                 venta_id=str(venta_id),
                 label=label,
                 cliente=cliente,
+                total=total_venta,
+                total_fmt=label_total,
                 destinatario=destinatario or None,
             )
         )

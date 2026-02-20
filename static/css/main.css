@@ -117,7 +117,7 @@ body:not(.theme-dark) .card-header p {
 .egreso-actions {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 1px;
+  gap: var(--savh-gap);
   align-items: stretch;
 }
 

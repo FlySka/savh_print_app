@@ -27,6 +27,7 @@ def draw_guide_block(
     out: Any,
     order_header: Dict[str, Any],
     items: pd.DataFrame,
+    guide_title: str = "GUIA DE DESPACHO",
 ):
     """Dibuja una guía de despacho en (x,y) con ancho w y alto h.
 
@@ -75,7 +76,7 @@ def draw_guide_block(
 
     # Header superior: título a la izquierda + logo a la derecha
     c.setFont("Helvetica-Bold", 10)
-    c.drawString(x + pad, y - 16, "GUIA DE DESPACHO")
+    c.drawString(x + pad, y - 16, guide_title)
 
     # ✅ Logo en vez de title/subtitle
     if logo_path:
@@ -219,7 +220,12 @@ def draw_guide_block(
 
 
 
-def render_guides_pdf(guides: List[Dict[str, Any]], out: Any, pdf_path: str):
+def render_guides_pdf(
+    guides: List[Dict[str, Any]],
+    out: Any,
+    pdf_path: str,
+    guide_title: str = "GUIA DE DESPACHO",
+):
     """Renderiza un PDF con guías de despacho (3 por página).
 
     Args:
@@ -252,6 +258,7 @@ def render_guides_pdf(guides: List[Dict[str, Any]], out: Any, pdf_path: str):
             out=out,
             order_header=od.get("header", {}) or {},
             items=od.get("items", pd.DataFrame()),
+            guide_title=guide_title,
         )
 
         cursor_y -= block_h + v_gap
@@ -263,7 +270,12 @@ def render_guides_pdf(guides: List[Dict[str, Any]], out: Any, pdf_path: str):
     c.save()
 
 
-def render_pdf_guides(guides: List[Dict[str, Any]], out: Any, pdf_path: str):
+def render_pdf_guides(
+    guides: List[Dict[str, Any]],
+    out: Any,
+    pdf_path: str,
+    guide_title: str = "GUIA DE DESPACHO",
+):
     """Alias por compatibilidad para el nombre esperado en `main.py`.
 
     Args:
@@ -271,7 +283,7 @@ def render_pdf_guides(guides: List[Dict[str, Any]], out: Any, pdf_path: str):
         out (Any): Config.
         pdf_path (str): Ruta PDF.
     """
-    render_guides_pdf(guides, out, pdf_path)
+    render_guides_pdf(guides, out, pdf_path, guide_title=guide_title)
 
 
 def _draw_logo_safe(
