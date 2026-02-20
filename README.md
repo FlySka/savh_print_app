@@ -202,27 +202,42 @@ Para “Subir PDF”, el endpoint deja el job directamente en `READY` y el `prin
 
 Objetivo: que API + workers queden “siempre arriba”, con restart automático y logs persistentes.
 
-1) Instala NSSM y crea 3 servicios apuntando al repo (el *Startup directory* debe ser la carpeta del proyecto para que encuentre `.env`).
+1) Instala NSSM (manual):
+   - Descarga: `https://nssm.cc/download`
+   - Extrae `win64\nssm.exe` y cópialo a, por ejemplo, `C:\Tools\nssm\nssm.exe`
+   - Agrega `C:\Tools\nssm` al `PATH` (o usa `set NSSM_EXE=C:\Tools\nssm\nssm.exe` antes de ejecutar el script).
 
-2) Servicio API:
+2) Recomendado (para que el servicio no dependa de `poetry` en PATH): crear venv in-project:
 
-- *Application*: `poetry` (o ruta completa a `poetry.exe` si NSSM no hereda tu PATH)
-- *Arguments*: `run uvicorn print_server.app.main:app --host 127.0.0.1 --port 8000`
+```powershell
+poetry config virtualenvs.in-project true
+poetry install
+```
+
+Esto deja el runtime en `.\.venv\Scripts\python.exe` (más estable para servicios).
+Sin `.venv`, el servicio suele fallar (especialmente si corre como `LocalSystem`) porque Poetry crea un venv vacío en `systemprofile`.
+
+3) Crea 3 servicios apuntando al repo (el *Startup directory / AppDirectory* debe ser la carpeta del proyecto para que encuentre `.env`).
+
+4) Servicio API (ejemplo en GUI de NSSM):
+
+- *Application*: `C:\path\to\savh_print_app\.venv\Scripts\python.exe`
+- *Arguments*: `-m uvicorn print_server.app.main:app --host 127.0.0.1 --port 8000`
 - *Startup directory*: ruta del repo (donde está `.env`)
 
-3) Servicio worker generación:
+5) Servicio worker generación:
 
-- *Application*: `poetry` (o ruta completa a `poetry.exe`)
-- *Arguments*: `run python -m create_prints_server.worker.generate_worker`
+- *Application*: `C:\path\to\savh_print_app\.venv\Scripts\python.exe`
+- *Arguments*: `-u -m create_prints_server.worker.generate_worker`
 - *Startup directory*: ruta del repo
 
-4) Servicio worker impresión:
+6) Servicio worker impresión:
 
-- *Application*: `poetry` (o ruta completa a `poetry.exe`)
-- *Arguments*: `run python -m print_server.worker.print_worker`
+- *Application*: `C:\path\to\savh_print_app\.venv\Scripts\python.exe`
+- *Arguments*: `-u -m print_server.worker.print_worker`
 - *Startup directory*: ruta del repo
 
-5) Configura logs con rotación (ejemplo, repite por servicio):
+7) Configura logs con rotación (ejemplo, repite por servicio):
 
 ```bat
 nssm set savh-api AppStdout C:\path\to\savh_print_app\data\logs\service_api.out.log
@@ -233,7 +248,11 @@ nssm set savh-api AppRotateBytes 10485760
 
 Script listo:
 
-- `scripts/nssm_install.bat` (edita `REPO_DIR` y `POETRY_EXE`, luego ejecútalo como Admin)
+- `scripts/nssm_install.bat install` (ejecuta como Admin; detecta el repo por la ubicación del script y usa `.venv` si existe)
+- `scripts/nssm_install.bat uninstall` (remueve los 3 servicios)
+
+Nota importante (credenciales/impresora):
+- Si tu `.env` referencia paths dentro de tu perfil de usuario (por ejemplo `GOOGLE_APPLICATION_CREDENTIALS=C:\Users\...`), configura los servicios para “Log on as” tu usuario (en `services.msc` o `nssm edit <servicio>`). Si quedan como `LocalSystem`, normalmente no tienen acceso a esos archivos ni a recursos del usuario.
 
 **B) Métricas Prometheus + Grafana**
 
@@ -262,7 +281,7 @@ docker compose -f monitoring/docker-compose.yml up -d
 
 > Nota: además de las métricas del instrumentator, la app expone `http_requests_by_status_total` (labels `handler`, `method`, `status`) para poder graficar tasa de errores (4xx/5xx).
 
-**D) Exponer por Tailscale (opcional)**
+**C) Exponer por Tailscale (opcional)**
 
 Objetivo: acceder a la API (`PORT=8000`) y Grafana (`3000`) desde tu tailnet sin abrir puertos públicos. Requiere Tailscale 1.38+ en Windows.
 
@@ -294,7 +313,7 @@ Notas:
 - Serve y Funnel comparten puerto; si luego necesitas público, usa `tailscale funnel --bg 443` y/o `tailscale funnel --bg 8443` (requiere políticas con atributo `funnel`).
 - Si cambias el puerto de la API, ajusta el backend en los comandos Serve y en `monitoring/prometheus.yml`.
 
-**C) Sentry para errores (API + workers)**
+**D) Sentry para errores (API + workers)**
 
 Ya está implementado el hook, pero es opcional:
 
