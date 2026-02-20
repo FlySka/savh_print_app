@@ -262,6 +262,38 @@ docker compose -f monitoring/docker-compose.yml up -d
 
 > Nota: además de las métricas del instrumentator, la app expone `http_requests_by_status_total` (labels `handler`, `method`, `status`) para poder graficar tasa de errores (4xx/5xx).
 
+**D) Exponer por Tailscale (opcional)**
+
+Objetivo: acceder a la API (`PORT=8000`) y Grafana (`3000`) desde tu tailnet sin abrir puertos públicos. Requiere Tailscale 1.38+ en Windows.
+
+Pasos rápidos (PowerShell, en el host Windows):
+
+```powershell
+# 1) Asegura que la app escuche en la red del host
+#    (en .env ya dejamos HOST=0.0.0.0)
+
+# 2) Inicia los servicios de la app
+scripts\savh.ps1 start
+
+# 3) Publica los puertos internos con Serve (solo tailnet, TLS automático)
+tailscale serve --bg --https=443  http://127.0.0.1:8000   # API
+tailscale serve --bg --https=8443 http://127.0.0.1:3000   # Grafana
+
+# 4) Verifica
+tailscale serve status
+
+# 5) (Opcional) Detener la exposición cuando no la uses
+tailscale serve reset
+```
+
+Acceso desde otro dispositivo del tailnet (MagicDNS):
+- API: `https://<tu-host>.ts.net/`
+- Grafana: `https://<tu-host>.ts.net:8443/`
+
+Notas:
+- Serve y Funnel comparten puerto; si luego necesitas público, usa `tailscale funnel --bg 443` y/o `tailscale funnel --bg 8443` (requiere políticas con atributo `funnel`).
+- Si cambias el puerto de la API, ajusta el backend en los comandos Serve y en `monitoring/prometheus.yml`.
+
 **C) Sentry para errores (API + workers)**
 
 Ya está implementado el hook, pero es opcional:

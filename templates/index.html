@@ -14,11 +14,11 @@
         <img id="banner" class="banner" src="/static/images/banner.jpg" alt="Banner" style="height: 270px; object-fit: cover;" />
 
         <div class="card-header">
-          <div>
+          <div class="card-header__text">
             <h1>📄 Centro de impresión</h1>
             <p>Genera guías/lista e imprime documentos.</p>
           </div>
-          <button id="btnTheme" class="secondary outline" type="button">🌙 Modo oscuro</button>
+          <button id="btnTheme" class="secondary outline theme-toggle" type="button">🌙</button>
         </div>
 
         <div class="section-title">Fecha objetivo</div>
@@ -31,12 +31,12 @@
         <div class="docs-grid">
           <div class="stack">
             <button id="btnGuides" class="btn-block" type="button">🧾 Imprimir guías de despacho</button>
-            <button id="btnEgreso" class="btn-block" type="button">🧾 Imprimir guia Egreso</button>
+            <button id="btnShipping" class="btn-block" type="button">🚚 Imprimir lista de despachos</button>
             
           </div>
         
           <div class="stack">
-            <button id="btnShipping" class="btn-block" type="button">🚚 Imprimir lista de despachos</button>
+            <button id="btnEgreso" class="btn-block primary outline" type="button">🧾 Imprimir guia Egreso</button>
             <div class="egreso-actions">
               <select id="egresoSelect" name="egresoSelect" aria-label="Seleccionar egreso" required>
                 <option selected disabled value="">Seleccionar</option>

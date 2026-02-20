@@ -14,7 +14,7 @@
   --savh-header-subtitle-color: #000000;
   --savh-tech-summary-color: #000000;
   --savh-btn-font-size: 18px;
-  --savh-gap: 8px;
+  --savh-gap: 10px;
   --pico-form-element-spacing-vertical: 0.5rem;   /* ↑↓ botones */
   --pico-form-element-spacing-horizontal: 0.8rem; /* ←→ botones */
 }
@@ -64,9 +64,10 @@ body {
 
 .card-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: 10px;
+  position: relative;
 }
 
 body:not(.theme-dark) .card-header h1 {
@@ -75,6 +76,16 @@ body:not(.theme-dark) .card-header h1 {
 
 body:not(.theme-dark) .card-header p {
   color: var(--savh-header-subtitle-color);
+}
+
+.card-header__text {
+  padding-right: 110px;
+}
+
+.theme-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .stack {

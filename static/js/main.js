@@ -22,10 +22,10 @@ function applyTheme(theme) {
   const body = document.body;
   if (theme === "dark") {
     body.classList.add("theme-dark");
-    themeBtn.textContent = "🌞 Modo claro";
+    themeBtn.textContent = "🌞";
   } else {
     body.classList.remove("theme-dark");
-    themeBtn.textContent = "🌙 Modo oscuro";
+    themeBtn.textContent = "🌙";
   }
   localStorage.setItem("theme", theme);
 }
