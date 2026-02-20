@@ -45,8 +45,8 @@ def draw_guide_block(
         order_header (Dict[str, Any]): Header de la orden.
         items (pd.DataFrame): Ítems de la orden.
     """
-    pad = 6
-    line = 12
+    pad = 5
+    line = 11
 
     contact = getattr(out, "contact", "")
     logo_path = getattr(out, "logo_path", None)
@@ -65,9 +65,9 @@ def draw_guide_block(
     bottom = y - h
 
     # Footer reservado (fijo): evita pisarse con tabla
-    sig_y = bottom + 6 * mm
-    total_y = bottom + 12 * mm
-    footer_top = bottom + 18 * mm
+    sig_y = bottom + 5 * mm
+    total_y = bottom + 11 * mm
+    footer_top = bottom + 16 * mm
 
     # Marco exterior
     c.setStrokeColor(colors.black)
@@ -90,10 +90,10 @@ def draw_guide_block(
         )
 
     # Línea separadora del header
-    c.line(x, y - 38, x + w, y - 38)
+    c.line(x, y - 34, x + w, y - 34)
 
     label_x = x + pad
-    row_y = y - 52
+    row_y = y - 48
 
     # Fecha / RUT
     c.setFont("Helvetica-Bold", 8)
@@ -125,7 +125,7 @@ def draw_guide_block(
     c.drawString(label_x + 55, row_y, str(direccion)[:75])
 
     # Texto de conformidad
-    row_y -= 16
+    row_y -= 14
     c.setFont("Helvetica-Bold", 7.5)
     c.drawString(
         x + pad,
@@ -134,18 +134,18 @@ def draw_guide_block(
     )
 
     # Tabla (top dinámico, bottom reservado por footer)
-    row_y -= 8
+    row_y -= 6
     table_top = row_y
     table_bottom = max(footer_top, bottom + pad)
 
     table_h = table_top - table_bottom
-    if table_h < 22 * mm:
-        table_h = max(18 * mm, table_h)
+    if table_h < 20 * mm:
+        table_h = max(16 * mm, table_h)
         table_bottom = table_top - table_h
 
     # Ajuste filas si queda apretado
-    header_inner_h = 16
-    min_row_h_pt = 9.0
+    header_inner_h = 14
+    min_row_h_pt = 8.5
     n_rows = max_items
     if table_h > header_inner_h:
         row_h_try = (table_h - header_inner_h) / max(1, max_items)
@@ -232,8 +232,8 @@ def render_guides_pdf(guides: List[Dict[str, Any]], out: Any, pdf_path: str):
     page_w, page_h = A4
     c = canvas.Canvas(pdf_path, pagesize=A4)
 
-    margin = 10 * mm
-    v_gap = 6 * mm
+    margin = 12 * mm
+    v_gap = 10 * mm
 
     block_w = page_w - 2 * margin
     block_h = (page_h - 2 * margin - 2 * v_gap) / 3

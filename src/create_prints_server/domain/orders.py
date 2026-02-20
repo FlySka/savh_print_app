@@ -9,6 +9,8 @@ def build_daily_orders(
     df_ventas: pd.DataFrame,
     df_det: pd.DataFrame,
     day: pd.Timestamp,
+    allowed_types: list[str] | None = None,
+    venta_id: str | None = None,
 ) -> pd.DataFrame:
     """
     Retorna una tabla por ítem (detalle) ya unida con cabecera de venta y cliente.
@@ -19,10 +21,13 @@ def build_daily_orders(
         df_ventas: tabla VENTAS
         df_det: tabla DETALLE_VENTAS
         day: día a filtrar (pd.Timestamp normalizado)
+        allowed_types: tipos de venta permitidos (ej. ["DESPACHO"]). Si es None, no filtra.
+        venta_id: si se indica, limita a esa venta_id exacta.
 
     Returns:
-        pd.DataFrame con detalle de ventas del día, unido con clientes y ventas.
+        pd.DataFrame con detalle de ventas del día filtrado, unido con clientes y ventas.
     """
+
     # --- normalizaciones mínimas ---
     # fechas
     if "fecha" not in df_ventas.columns:
@@ -52,6 +57,27 @@ def build_daily_orders(
 
     if ventas_dia.empty:
         return pd.DataFrame()
+
+    # --- filtrar por tipo si corresponde ---
+    if allowed_types is not None:
+        if "tipo" not in ventas_dia.columns:
+            raise KeyError("VENTAS debe tener columna 'tipo' para filtrar por tipo")
+
+        tipos = {t.strip().upper() for t in allowed_types if t is not None}
+        ventas_dia["tipo"] = (
+            ventas_dia["tipo"].fillna("").astype(str).str.strip().str.upper()
+        )
+        if tipos:
+            ventas_dia = ventas_dia[ventas_dia["tipo"].isin(tipos)].copy()
+
+        if ventas_dia.empty:
+            return pd.DataFrame()
+
+    # --- filtrar por venta específica si corresponde ---
+    if venta_id is not None:
+        ventas_dia = ventas_dia[ventas_dia["id"] == str(venta_id)].copy()
+        if ventas_dia.empty:
+            return pd.DataFrame()
 
     # --- join ventas + clientes ---
     # VENTAS.cliente -> CLIENTES.nombre

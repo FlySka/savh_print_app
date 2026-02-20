@@ -94,8 +94,9 @@ def _process_job(db: Session, job: PrintJob) -> None:
     day = date.fromisoformat(str(_payload_get(payload, "date")))
 
     try:
-        logger.info(f"Generando PDFs job_id={job.id} what={what} day={day}")
-        artifacts = generate_pdfs(what=what, day=day)
+        venta_id = payload.get("venta_id")
+        logger.info(f"Generando PDFs job_id={job.id} what={what} day={day} venta_id={venta_id}")
+        artifacts = generate_pdfs(what=what, day=day, venta_id=venta_id)
         files: list[str] = []
         if artifacts.shipping_list_path:
             files.append(artifacts.shipping_list_path)

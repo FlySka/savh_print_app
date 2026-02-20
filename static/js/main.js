@@ -1,7 +1,6 @@
 const out = document.getElementById("out");
 const dayInput = document.getElementById("day");
 const themeBtn = document.getElementById("btnTheme");
-const toast = document.getElementById("toast");
 const techBox = document.getElementById("techBox");
 const techSummary = document.getElementById("techSummary");
 const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -34,14 +33,12 @@ function show(msg) {
 }
 
 function notify(message, type = "info", timeout = 2600) {
-  if (!toast) return;
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  toast.style.display = "block";
-  clearTimeout(notify._timer);
-  notify._timer = setTimeout(() => {
-    toast.style.display = "none";
-  }, timeout);
+  if (!window.Notiflix) return;
+  const opts = { timeout };
+  if (type === "success") return Notiflix.Notify.success(message, opts);
+  if (type === "error") return Notiflix.Notify.failure(message, opts);
+  if (type === "warning") return Notiflix.Notify.warning(message, opts);
+  return Notiflix.Notify.info(message, opts);
 }
 
 async function enqueueDocs(what) {
@@ -69,12 +66,20 @@ async function enqueueDocs(what) {
 
 document.getElementById("btnGuides").addEventListener("click", () => enqueueDocs("guides"));
 document.getElementById("btnShipping").addEventListener("click", () => enqueueDocs("shipping_list"));
-document.getElementById("btnBoth").addEventListener("click", () => enqueueDocs("both"));
 
 themeBtn.addEventListener("click", () => {
   const current = document.body.classList.contains("theme-dark") ? "dark" : "light";
   applyTheme(current === "dark" ? "light" : "dark");
 });
+
+const clearUploadBtn = document.getElementById("btnUploadClear");
+if (clearUploadBtn) {
+  clearUploadBtn.addEventListener("click", () => {
+    const fileInput = document.getElementById("file");
+    if (fileInput) fileInput.value = "";
+    notify("🧹 Selección limpiada.", "info");
+  });
+}
 
 document.getElementById("btnUpload").addEventListener("click", async () => {
   const f = document.getElementById("file").files[0];

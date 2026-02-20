@@ -5,15 +5,20 @@ from datetime import date, datetime
 from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
+import pandas as pd
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 
+from create_prints_server.domain.orders import build_daily_orders
+from create_prints_server.infra.google_sheets import sheet_to_df
 from printing_queue.db import get_db
 from printing_queue.infra.job_status_events import try_record_print_job_status_event
 from printing_queue.models import PrintJob, PrintJobStatus, PrintJobType
 
-DocKind = Literal["shipping_list", "guides", "both"]
+DocKind = Literal["shipping_list", "guides", "both", "egreso"]
 
 router = APIRouter(tags=["create_prints"])
 
@@ -21,8 +26,19 @@ router = APIRouter(tags=["create_prints"])
 class EnqueueGenerateRequest(BaseModel):
     """Request para encolar generación/impresión."""
 
-    what: DocKind = Field(..., description="Qué generar: shipping_list, guides o both.")
+    what: DocKind = Field(
+        ..., description="Qué generar: shipping_list, guides, both o egreso."
+    )
     day: date | None = Field(None, description="Fecha objetivo. Si es None, usa hoy.")
+    venta_id: str | None = Field(
+        None, description="Id de la venta (requerido si what == 'egreso')."
+    )
+
+    @model_validator(mode="after")
+    def _validate_venta_id(self) -> "EnqueueGenerateRequest":
+        if self.what == "egreso" and not self.venta_id:
+            raise ValueError("venta_id es requerido cuando what == 'egreso'")
+        return self
 
 
 class EnqueueGenerateResponse(BaseModel):
@@ -40,6 +56,61 @@ def _today_in_config_timezone() -> date:
         return datetime.now(ZoneInfo(timezone)).date()
     except Exception:
         return date.today()
+
+
+def _required_env(name: str) -> str:
+    value = os.getenv(name)
+    if value is None or value == "":
+        raise KeyError(f"Falta variable de entorno requerida: {name}")
+    return value
+
+
+def _load_sheets_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Carga dataframes desde Google Sheets usando la config de entorno."""
+    sheets_cfg = {
+        "SHEETS_ID": _required_env("SHEETS_ID"),
+        "CLIENTES_SHEET": _required_env("CLIENTES_SHEET"),
+        "DESTINATARIOS_SHEET": _required_env("DESTINATARIOS_SHEET"),
+        "VENTAS_SHEET": _required_env("VENTAS_SHEET"),
+        "DETALLE_SHEET": _required_env("DETALLE_SHEET"),
+        "CLIENTES_RANGE": _required_env("CLIENTES_RANGE"),
+        "DESTINATARIOS_RANGE": _required_env("DESTINATARIOS_RANGE"),
+        "VENTAS_RANGE": _required_env("VENTAS_RANGE"),
+        "DETALLE_RANGE": _required_env("DETALLE_RANGE"),
+    }
+
+    scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+    creds = Credentials.from_service_account_file(
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"],
+        scopes=scopes,
+    )
+    service = build("sheets", "v4", credentials=creds)
+
+    df_clientes = sheet_to_df(
+        service,
+        sheets_cfg["SHEETS_ID"],
+        sheets_cfg["CLIENTES_SHEET"],
+        sheets_cfg["CLIENTES_RANGE"],
+    )
+    df_destinatarios = sheet_to_df(
+        service,
+        sheets_cfg["SHEETS_ID"],
+        sheets_cfg["DESTINATARIOS_SHEET"],
+        sheets_cfg["DESTINATARIOS_RANGE"],
+    )
+    df_ventas = sheet_to_df(
+        service,
+        sheets_cfg["SHEETS_ID"],
+        sheets_cfg["VENTAS_SHEET"],
+        sheets_cfg["VENTAS_RANGE"],
+    )
+    df_det = sheet_to_df(
+        service,
+        sheets_cfg["SHEETS_ID"],
+        sheets_cfg["DETALLE_SHEET"],
+        sheets_cfg["DETALLE_RANGE"],
+    )
+    return df_clientes, df_destinatarios, df_ventas, df_det
 
 
 @router.get("/health")
@@ -69,10 +140,14 @@ def enqueue_generate(
     """
     target_day = req.day or _today_in_config_timezone()
 
+    payload: dict[str, Any] = {"what": req.what, "date": target_day.isoformat()}
+    if req.venta_id:
+        payload["venta_id"] = req.venta_id
+
     job = PrintJob(
         job_type=PrintJobType.SHIPPING_DOCS,
         status=PrintJobStatus.PENDING,
-        payload={"what": req.what, "date": target_day.isoformat()},
+        payload=payload,
         file_path=None,
     )
     db.add(job)
@@ -92,3 +167,54 @@ def enqueue_generate(
         status=job.status.value,
         job_type=job.job_type.value,
     )
+
+
+class EgresoOption(BaseModel):
+    """Opción de venta tipo EGRESO disponible para impresión."""
+
+    venta_id: str
+    label: str
+    cliente: str
+    destinatario: str | None = None
+
+
+@router.get("/api/egresos", response_model=list[EgresoOption])
+def list_egresos(day: date | None = None) -> list[EgresoOption]:
+    """Retorna ventas de tipo EGRESO para la fecha indicada."""
+    target_day = day or _today_in_config_timezone()
+    dt_day = datetime(target_day.year, target_day.month, target_day.day)
+
+    df_clientes, df_destinatarios, df_ventas, df_det = _load_sheets_data()
+    det_dia = build_daily_orders(
+        df_clientes,
+        df_destinatarios,
+        df_ventas,
+        df_det,
+        pd.to_datetime(dt_day),
+        allowed_types=["EGRESO"],
+    )
+
+    if det_dia.empty:
+        return []
+
+    options: list[EgresoOption] = []
+    for venta_id, g in det_dia.groupby("venta_id", sort=False):
+        r0 = g.iloc[0]
+        cliente = str(r0.get("nombre", "") or r0.get("cliente", "") or "")
+        destinatario = str(r0.get("destinatario", "") or "")
+        label_parts = [f"#{venta_id}"]
+        if destinatario:
+            label_parts.append(destinatario)
+        if cliente and cliente != destinatario:
+            label_parts.append(cliente)
+        label = " - ".join(label_parts)
+        options.append(
+            EgresoOption(
+                venta_id=str(venta_id),
+                label=label,
+                cliente=cliente,
+                destinatario=destinatario or None,
+            )
+        )
+
+    return options

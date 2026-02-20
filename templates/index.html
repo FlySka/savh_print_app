@@ -4,7 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Impresión SAVH</title>
+    <link rel="stylesheet" href="/static/css/pico/css/pico.min.css" />
     <link rel="stylesheet" href="/static/css/main.css" />
+    <link rel="stylesheet" href="/static/css/notiflix/dist/notiflix-3.2.8.min.css" />
   </head>
   <body>
     <div class="wrap">
@@ -16,41 +18,45 @@
             <h1>📄 Centro de impresión</h1>
             <p>Genera guías/lista e imprime documentos.</p>
           </div>
-          <button id="btnTheme" class="ghost" style="width:auto; padding:10px 12px;">🌙 Modo oscuro</button>
+          <button id="btnTheme" class="secondary outline" type="button">🌙 Modo oscuro</button>
         </div>
 
         <div class="section-title">Fecha objetivo</div>
-        <div class="center-grid-8">
-          <div></div><div></div>
-          <div class="stack span-6">
-            <input id="day" type="date" />
-          </div>
-          <div></div><div></div>
+        <div class="stack section-narrow">
+          <input id="day" type="date" />
         </div>
 
         <div class="section-title">Documentos desde Base de datos</div>
-        <div class="center-grid-8">
-          <div></div><div></div>
-          <div class="stack span-6">
-            <button id="btnGuides">🧾 Imprimir guías de despacho</button>
-            <button id="btnShipping">🚚 Imprimir lista de despachos</button>
-            <button id="btnBoth">📑 Imprimir ambas</button>
+
+        <div class="docs-grid">
+          <div class="stack">
+            <button id="btnGuides" class="btn-block" type="button">🧾 Imprimir guías de despacho</button>
+            <button id="btnEgreso" class="btn-block" type="button">🧾 Imprimir guia Egreso</button>
           </div>
-          <div></div><div></div>
+        
+          <div class="stack">
+            <button id="btnShipping" class="btn-block" type="button">🚚 Imprimir lista de despachos</button>
+            
+          
+            <div class="egreso-actions">
+              <select name="select" aria-label="Select" required>
+                <option selected disabled value="">Seleccionar</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <div class="section-title">Subir PDF</div>
-        <div class="center-grid-8">
-          <div></div><div></div>
-          <div class="stack span-6">
-            <input id="file" type="file" accept="application/pdf,.pdf" />
-            <button id="btnUpload">📎 Subir PDF e imprimir</button>
-            <div class="small">Solo PDF. El archivo se encola y el worker lo imprime.</div>
-          </div>
-          <div></div><div></div>
-        </div>
+        <div class="stack section-narrow upload-stack">
+          <input id="file" type="file" accept="application/pdf,.pdf" />
 
-        <div id="toast" class="toast" style="display:none;"></div>
+          <div class="actions-2">
+            <button id="btnUpload" class="btn-block" type="button">📎 Subir PDF e imprimir</button>
+            <button id="btnUploadClear" class="btn-block secondary outline" type="button">🧹 Limpiar</button>
+          </div>
+
+          <div class="small">Solo PDF.</div>
+        </div>
 
         <details id="techBox" class="tech">
           <summary id="techSummary">Detalles técnicos</summary>
@@ -59,6 +65,7 @@
       </div>
     </div>
 
+    <script src="/static/css/notiflix/dist/notiflix-aio-3.2.8.min.js" defer></script>
     <script src="/static/js/main.js" defer></script>
   </body>
 </html>

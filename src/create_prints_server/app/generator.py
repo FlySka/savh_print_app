@@ -19,7 +19,7 @@ from create_prints_server.render.guides_pdf import render_guides_pdf
 from create_prints_server.render.shipping_pdf import render_orders_pdf
 
 
-DocKind = Literal["shipping_list", "guides", "both"]
+DocKind = Literal["shipping_list", "guides", "both", "egreso"]
 load_dotenv()
 logger = get_logger(__name__)
 
@@ -74,12 +74,14 @@ def generate_pdfs(
     *,
     what: DocKind,
     day: date,
+    venta_id: str | None = None,
 ) -> GeneratedArtifacts:
     """Genera PDFs (shipping list / guías) para una fecha.
 
     Args:
         what: Qué generar ("shipping_list", "guides" o "both").
         day: Fecha objetivo.
+        venta_id: Si `what == "egreso"`, id de la venta a imprimir.
 
     Returns:
         GeneratedArtifacts: Paths generados y cantidad de órdenes.
@@ -163,7 +165,22 @@ def generate_pdfs(
         )
 
     dt_day = datetime(day.year, day.month, day.day)
-    det_dia = build_daily_orders(df_clientes, df_destinatarios, df_ventas, df_det, dt_day)
+
+    allowed_types: list[str] | None = ["DESPACHO"]
+    if what == "egreso":
+        if not venta_id:
+            raise ValueError("venta_id es requerido cuando what == 'egreso'")
+        allowed_types = ["EGRESO"]
+
+    det_dia = build_daily_orders(
+        df_clientes,
+        df_destinatarios,
+        df_ventas,
+        df_det,
+        dt_day,
+        allowed_types=allowed_types,
+        venta_id=venta_id,
+    )
     logger.info(f"Ventas filtradas para {day.isoformat()}: {len(det_dia)} registros")
 
     if det_dia.empty:
@@ -180,7 +197,7 @@ def generate_pdfs(
         shipping_path = out_cfg.pdf_orders_path
         logger.info(f"Lista de despacho generada en {shipping_path}")
 
-    if what in ("guides", "both"):
+    if what in ("guides", "both", "egreso"):
         render_guides_pdf(guides, out_cfg, out_cfg.pdf_guides_path)
         guides_path = out_cfg.pdf_guides_path
         logger.info(f"Guías generadas en {guides_path}")
