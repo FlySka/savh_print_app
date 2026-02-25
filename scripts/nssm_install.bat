@@ -39,7 +39,7 @@ REM Repo root = parent de \scripts (este archivo vive en scripts\)
 for %%I in ("%~dp0.") do set "SCRIPTS_DIR=%%~fI"
 for %%I in ("%SCRIPTS_DIR%\..") do set "REPO_DIR=%%~fI"
 
-if not defined HOST set "HOST=127.0.0.1"
+if not defined HOST set "HOST=0.0.0.0"
 if not defined PORT set "PORT=8000"
 if not defined ROTATE_BYTES set "ROTATE_BYTES=10485760"
 
@@ -266,7 +266,7 @@ echo.
 echo Overrides (antes de correr):
 echo   set NSSM_EXE=C:\\Tools\\nssm\\nssm.exe
 echo   set POETRY_EXE=C:\\ruta\\a\\poetry.exe
-echo   set HOST=127.0.0.1
+echo   set HOST=0.0.0.0
 echo   set PORT=8000
 exit /b 2
 
