@@ -5,7 +5,7 @@ Monolito modular en Python que:
 - expone una **web** (FastAPI) para solicitar generación/impresión
 - usa una **BD PostgreSQL** como cola (`printing.print_jobs`)
 - corre 2 **workers**:
-  - `generate_worker`: lee Google Sheets y genera PDFs
+  - `generate_worker`: lee la fuente configurada (`Google Sheets` o `PostgreSQL comercial`) y genera PDFs
   - `print_worker`: imprime PDFs en Windows usando SumatraPDF
 
 Estado de soporte: la app se mantiene **solo para Windows 10/11** (nativo). Las instrucciones Linux/WSL quedan como referencia histórica y ya no se prueban.
@@ -24,6 +24,7 @@ Estado de soporte: la app se mantiene **solo para Windows 10/11** (nativo). Las 
 
 - Generación: `python -m create_prints_server.worker.generate_worker`
   - toma jobs `PENDING` tipo `shipping_docs`
+  - resuelve la fuente desde `DOCUMENTS_DATA_SOURCE`
   - genera PDFs y deja el job en `READY` con `payload.files`
 - Impresión: `python -m print_server.worker.print_worker`
   - toma jobs `READY` (upload o generados)
@@ -45,7 +46,7 @@ Estado de soporte: la app se mantiene **solo para Windows 10/11** (nativo). Las 
 - Poetry
 - PostgreSQL
 - Para imprimir en Windows: SumatraPDF instalado y una impresora configurada
-- Credenciales de Google (Service Account) con acceso de lectura al Google Sheet
+- Credenciales de Google (Service Account) con acceso de lectura al Google Sheet, solo si se usa `DOCUMENTS_DATA_SOURCE=sheets`
 
 **Configurar SumatraPDF (impresión)**
 
@@ -68,9 +69,13 @@ Este repo **requiere** un `.env` para funcionar. Usa `.env.example.windows` como
 
 Variables principales:
 
-- `DATABASE_URL`: conexión a Postgres (ej: `postgresql+psycopg://user:pass@localhost:5432/db`)
-- `GOOGLE_APPLICATION_CREDENTIALS`: path al JSON del service account
-- `SHEETS_ID`, `*_SHEET`, `*_RANGE`: configuración de lectura de Google Sheets
+- `DOCUMENTS_DATA_SOURCE`: fuente global para generación/listado (`sheets` o `postgres`)
+- `DATABASE_URL`: conexión a la Postgres de cola de impresión (tabla `printing.print_jobs`)
+- `BUSINESS_DATABASE_URL`: conexión a la Postgres comercial desde donde se leen ventas, clientes, destinatarios e ítems cuando `DOCUMENTS_DATA_SOURCE=postgres`
+- `BUSINESS_DB_SCHEMA`: schema comercial a consultar, por defecto `core`
+- `DOCUMENTS_DISPATCH_SALE_TYPE`, `DOCUMENTS_EGRESO_SALE_TYPE`: aliases configurables para mapear el catálogo real de `dim_sale_types.tipo`
+- `GOOGLE_APPLICATION_CREDENTIALS`: path al JSON del service account, solo si `DOCUMENTS_DATA_SOURCE=sheets`
+- `SHEETS_ID`, `*_SHEET`, `*_RANGE`: configuración de lectura de Google Sheets, solo si `DOCUMENTS_DATA_SOURCE=sheets`
 - `PDF_ORDERS_PATH`, `PDF_GUIDES_PATH`: paths de salida de PDFs
 - `UPLOAD_DIR`: dónde se guardan PDFs subidos
 - `PRINTER_NAME`, `SUMATRA_PATH`: impresión por SumatraPDF (Windows)
@@ -80,6 +85,26 @@ Variables principales:
 Notas:
 
 - Paths deben ser Windows (ej. `C:\\Users\\...\\data\\uploads`). El uso con WSL no está soportado.
+- `DATABASE_URL` y `BUSINESS_DATABASE_URL` pueden apuntar al mismo servidor PostgreSQL, pero resuelven responsabilidades distintas.
+
+---
+
+### Fuente de datos de documentos
+
+La UI y los endpoints no eligen la fuente por request. La selección es **global** y se resuelve desde `.env`.
+
+- `DOCUMENTS_DATA_SOURCE=sheets`
+  - mantiene el comportamiento histórico
+  - `generate_worker` y `GET /api/egresos` leen Google Sheets
+  - requiere `GOOGLE_APPLICATION_CREDENTIALS`, `SHEETS_ID`, `*_SHEET` y `*_RANGE`
+
+- `DOCUMENTS_DATA_SOURCE=postgres`
+  - usa la BD comercial en `BUSINESS_DATABASE_URL`
+  - la cola de impresión sigue usando `DATABASE_URL`
+  - `generate_worker` y `GET /api/egresos` leen `sales`, `sale_items`, `orders`, `parties`, `parties_customer`, `parties_recipient`, `products` y tablas relacionadas
+  - los aliases `DOCUMENTS_DISPATCH_SALE_TYPE` y `DOCUMENTS_EGRESO_SALE_TYPE` permiten adaptar el código a los valores reales de `dim_sale_types.tipo`
+
+En ambos casos, `print_worker`, la UI y el contrato HTTP de `POST /api/jobs/generate` no cambian.
 
 ---
 
@@ -254,6 +279,46 @@ Script listo:
 Nota importante (credenciales/impresora):
 - Si tu `.env` referencia paths dentro de tu perfil de usuario (por ejemplo `GOOGLE_APPLICATION_CREDENTIALS=C:\Users\...`), configura los servicios para “Log on as” tu usuario (en `services.msc` o `nssm edit <servicio>`). Si quedan como `LocalSystem`, normalmente no tienen acceso a esos archivos ni a recursos del usuario.
 
+**Actualizar servicios NSSM al cambiar la fuente a PostgreSQL**
+
+Cuando pases de Sheets a la BD comercial, el runtime sigue siendo Windows y los servicios siguen siendo los mismos (`savh-api`, `savh-worker-generate`, `savh-worker-print`). Lo que cambia es la configuración.
+
+1) Edita `.env` en el host Windows y define al menos:
+
+```env
+DOCUMENTS_DATA_SOURCE=postgres
+BUSINESS_DATABASE_URL=postgresql+psycopg://usuario:password@HOST:5432/tu_bd_comercial
+BUSINESS_DB_SCHEMA=core
+DOCUMENTS_DISPATCH_SALE_TYPE=DESPACHO
+DOCUMENTS_EGRESO_SALE_TYPE=EGRESO
+```
+
+2) Verifica permisos de la cuenta del servicio:
+  - la cuenta usada por NSSM debe poder abrir `.env`
+  - debe tener conectividad a `BUSINESS_DATABASE_URL`
+  - si la BD usa firewall, allowlist o credenciales integradas, revísalo antes del restart
+
+3) Reinicia como mínimo los servicios que leen documentos:
+
+```bat
+nssm restart savh-api
+nssm restart savh-worker-generate
+```
+
+También puedes reinstalar la definición completa si prefieres estandarizar el host de nuevo:
+
+```bat
+scripts\nssm_install.bat install
+```
+
+4) No hace falta tocar `savh-worker-print` por el cambio de fuente, salvo que también cambies runtime, `.venv` o rutas de impresión.
+
+5) Valida el cambio en Windows:
+  - abre `http://HOST:PORT/api/egresos?day=YYYY-MM-DD`
+  - encola un `POST /api/jobs/generate`
+  - revisa `data\logs\service_api.out.log` y `data\logs\service_generate.out.log`
+  - confirma que ya no falle por variables de Sheets si `DOCUMENTS_DATA_SOURCE=postgres`
+
 **B) Métricas Prometheus + Grafana**
 
 El hook ya está en `printing_queue.infra.observability.instrument_fastapi_if_enabled` y la dependencia está en `pyproject.toml`. Solo actívalo:
@@ -342,7 +407,7 @@ SENTRY_PROFILES_SAMPLE_RATE=0
 ### Estructura de carpetas
 
 - `src/print_server/` → UI + endpoints (upload/consulta jobs) + impresión
-- `src/create_prints_server/` → endpoints de generación + lógica de Google Sheets + render PDF
+- `src/create_prints_server/` → endpoints de generación + providers de datos comerciales + render PDF
 - `src/printing_queue/` → settings + db + modelos ORM de la cola
 - `data/uploads/` → PDFs subidos
 - `data/shipping_list/` y `data/guides/` → PDFs generados

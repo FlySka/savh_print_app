@@ -1,0 +1,548 @@
+"table_schema","table_name","ordinal_position","column_name","data_type","udt_name","is_nullable","column_default","constraint_type","foreign_table_schema","foreign_table_name","foreign_column_name"
+"audit","audit_log",1,"id","bigint","int8","NO","nextval('audit.audit_log_id_seq'::regclass)","PK","audit","audit_log","id"
+"audit","audit_log",2,"occurred_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"audit","audit_log",3,"schema_name","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"audit","audit_log",4,"table_name","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"audit","audit_log",5,"action","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"audit","audit_log",6,"pk","jsonb","jsonb","YES",NULL,"",NULL,NULL,NULL
+"audit","audit_log",7,"row_before","jsonb","jsonb","YES",NULL,"",NULL,NULL,NULL
+"audit","audit_log",8,"row_after","jsonb","jsonb","YES",NULL,"",NULL,NULL,NULL
+"audit","audit_log",9,"changed_fields","jsonb","jsonb","YES",NULL,"",NULL,NULL,NULL
+"audit","audit_log",10,"actor_user_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"audit","audit_log",11,"actor","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"audit","audit_log",12,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"audit","audit_log",13,"request_id","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"audit","audit_log",14,"txid","bigint","int8","YES",NULL,"",NULL,NULL,NULL
+"audit","audit_log",15,"application_name","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"audit","audit_log",16,"client_addr","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","app_users",1,"id","integer","int4","NO",NULL,"PK","core","app_users","id"
+"core","app_users",2,"email","character varying","varchar","YES",NULL,"","core","app_users","email"
+"core","app_users",3,"nombre","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","app_users",4,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","app_users",5,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","app_users",6,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","assets",1,"id","integer","int4","NO",NULL,"PK","core","assets","id"
+"core","assets",2,"alias","character varying","varchar","YES",NULL,"","core","assets","alias"
+"core","assets",3,"tipo_activo_id","integer","int4","YES",NULL,"FK","core","dim_type_assets","id"
+"core","assets",4,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","assets_vehicles",1,"activo_id","integer","int4","NO",NULL,"FK","core","assets","id"
+"core","assets_vehicles",1,"activo_id","integer","int4","NO",NULL,"PK","core","assets_vehicles","activo_id"
+"core","assets_vehicles",2,"patente","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","assets_vehicles",3,"tipo","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","assets_vehicles",4,"marca","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","assets_vehicles",5,"modelo","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","assets_vehicles",6,"anio","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","cashflow_movements",1,"id","bigint","int8","NO","nextval('core.cashflow_movements_id_seq'::regclass)","PK","core","cashflow_movements","id"
+"core","cashflow_movements",2,"fecha","date","date","YES",NULL,"",NULL,NULL,NULL
+"core","cashflow_movements",3,"movement_type","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"core","cashflow_movements",4,"cash_amount","numeric","numeric","NO","0","",NULL,NULL,NULL
+"core","cashflow_movements",5,"check_amount","numeric","numeric","NO","0","",NULL,NULL,NULL
+"core","cashflow_movements",6,"total_amount","numeric","numeric","NO","0","",NULL,NULL,NULL
+"core","cashflow_movements",7,"counterparty_label","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"core","cashflow_movements",8,"reference","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","cashflow_movements",9,"observaciones","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","cashflow_movements",10,"created_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","cashflow_movements",11,"updated_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","cashflow_movements",12,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","cashflow_movements",13,"deleted_by_user_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","cashflow_movements",14,"ingest_event_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","codes",1,"id","integer","int4","NO",NULL,"PK","core","codes","id"
+"core","codes",2,"codigo","character varying","varchar","YES",NULL,"","core","codes","codigo"
+"core","codes",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","codes",4,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","codes",5,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","customer_price_list_assignments",1,"id","bigint","int8","NO","nextval('core.customer_price_list_assignments_id_seq'::regclass)","PK","core","customer_price_list_assignments","id"
+"core","customer_price_list_assignments",2,"cliente_id","integer","int4","NO",NULL,"","core","customer_price_list_assignments","cliente_id"
+"core","customer_price_list_assignments",2,"cliente_id","integer","int4","NO",NULL,"","core","customer_price_list_assignments","price_list_id"
+"core","customer_price_list_assignments",3,"price_list_id","bigint","int8","NO",NULL,"","core","customer_price_list_assignments","price_list_id"
+"core","customer_price_list_assignments",3,"price_list_id","bigint","int8","NO",NULL,"","core","customer_price_list_assignments","cliente_id"
+"core","customer_price_list_assignments",3,"price_list_id","bigint","int8","NO",NULL,"FK","core","price_lists","id"
+"core","customer_price_list_assignments",4,"created_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","customer_price_list_assignments",5,"updated_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","customer_price_list_assignments",6,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","customer_price_list_assignments",7,"deleted_by_user_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","customer_price_overrides",1,"id","bigint","int8","NO","nextval('core.customer_price_overrides_id_seq'::regclass)","PK","core","customer_price_overrides","id"
+"core","customer_price_overrides",2,"cliente_id","integer","int4","NO",NULL,"",NULL,NULL,NULL
+"core","customer_price_overrides",3,"producto_id","integer","int4","NO",NULL,"",NULL,NULL,NULL
+"core","customer_price_overrides",4,"categoria_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","customer_price_overrides",5,"variedad_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","customer_price_overrides",6,"calibre_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","customer_price_overrides",7,"precio","numeric","numeric","NO",NULL,"",NULL,NULL,NULL
+"core","customer_price_overrides",8,"vigencia_desde","date","date","NO",NULL,"",NULL,NULL,NULL
+"core","customer_price_overrides",9,"vigencia_hasta","date","date","YES",NULL,"",NULL,NULL,NULL
+"core","customer_price_overrides",10,"is_active","boolean","bool","NO","true","",NULL,NULL,NULL
+"core","customer_price_overrides",11,"created_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","customer_price_overrides",12,"updated_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","customer_price_overrides",13,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","customer_price_overrides",14,"deleted_by_user_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","deliveries",1,"id","integer","int4","NO",NULL,"PK","core","deliveries","id"
+"core","deliveries",2,"pedido_id","integer","int4","YES",NULL,"","core","deliveries","pedido_id"
+"core","deliveries",2,"pedido_id","integer","int4","YES",NULL,"FK","core","orders","id"
+"core","deliveries",3,"fecha","date","date","YES",NULL,"",NULL,NULL,NULL
+"core","deliveries",4,"receptor","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","deliveries",5,"foto_url","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","deliveries",6,"observaciones","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","deliveries",7,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","deliveries",8,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","deliveries",9,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","deliveries",10,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","deliveries",11,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","dim_calibers",1,"id","integer","int4","NO",NULL,"PK","core","dim_calibers","id"
+"core","dim_calibers",2,"producto_id","integer","int4","YES",NULL,"FK","core","products","id"
+"core","dim_calibers",3,"calibre","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","dim_calibers",4,"convencion_id","integer","int4","YES",NULL,"FK","core","dim_conventions","id"
+"core","dim_calibers",5,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_categories",1,"id","integer","int4","NO",NULL,"PK","core","dim_categories","id"
+"core","dim_categories",2,"producto_id","integer","int4","YES",NULL,"FK","core","products","id"
+"core","dim_categories",3,"categoria","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","dim_categories",4,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_commercial_models",1,"id","integer","int4","NO",NULL,"PK","core","dim_commercial_models","id"
+"core","dim_commercial_models",2,"tipo","character varying","varchar","YES",NULL,"","core","dim_commercial_models","tipo"
+"core","dim_commercial_models",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_conventions",1,"id","integer","int4","NO",NULL,"PK","core","dim_conventions","id"
+"core","dim_conventions",2,"convencion","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","dim_conventions",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_customer_types",1,"id","integer","int4","NO",NULL,"PK","core","dim_customer_types","id"
+"core","dim_customer_types",2,"tipo","character varying","varchar","YES",NULL,"","core","dim_customer_types","tipo"
+"core","dim_customer_types",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_economic_types",1,"id","integer","int4","NO",NULL,"PK","core","dim_economic_types","id"
+"core","dim_economic_types",2,"tipo","character varying","varchar","YES",NULL,"","core","dim_economic_types","tipo"
+"core","dim_economic_types",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_entity_type",1,"id","integer","int4","NO",NULL,"PK","core","dim_entity_type","id"
+"core","dim_entity_type",2,"code","character varying","varchar","YES",NULL,"","core","dim_entity_type","code"
+"core","dim_entity_type",3,"descripcion","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","dim_entity_type",4,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_event_type",1,"id","integer","int4","NO",NULL,"PK","core","dim_event_type","id"
+"core","dim_event_type",2,"code","character varying","varchar","YES",NULL,"","core","dim_event_type","code"
+"core","dim_event_type",3,"descripcion","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","dim_event_type",4,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_expense_groups",1,"id","integer","int4","NO",NULL,"PK","core","dim_expense_groups","id"
+"core","dim_expense_groups",2,"nombre","character varying","varchar","YES",NULL,"","core","dim_expense_groups","nombre"
+"core","dim_expense_groups",3,"descripcion","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","dim_expense_groups",4,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_expense_types",1,"id","integer","int4","NO",NULL,"PK","core","dim_expense_types","id"
+"core","dim_expense_types",2,"tipo","character varying","varchar","YES",NULL,"","core","dim_expense_types","tipo"
+"core","dim_expense_types",3,"grupo_id","integer","int4","YES",NULL,"FK","core","dim_expense_groups","id"
+"core","dim_expense_types",4,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_order_statuses",1,"id","integer","int4","NO",NULL,"PK","core","dim_order_statuses","id"
+"core","dim_order_statuses",2,"estado","character varying","varchar","YES",NULL,"","core","dim_order_statuses","estado"
+"core","dim_order_statuses",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_payment_methods",1,"id","integer","int4","NO",NULL,"PK","core","dim_payment_methods","id"
+"core","dim_payment_methods",2,"tipo","character varying","varchar","YES",NULL,"","core","dim_payment_methods","tipo"
+"core","dim_payment_methods",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_purchase_statuses",1,"id","integer","int4","NO",NULL,"PK","core","dim_purchase_statuses","id"
+"core","dim_purchase_statuses",2,"estado","character varying","varchar","YES",NULL,"","core","dim_purchase_statuses","estado"
+"core","dim_purchase_statuses",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_sale_types",1,"id","integer","int4","NO",NULL,"PK","core","dim_sale_types","id"
+"core","dim_sale_types",2,"tipo","character varying","varchar","YES",NULL,"","core","dim_sale_types","tipo"
+"core","dim_sale_types",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_sales_billing_statuses",1,"id","integer","int4","NO",NULL,"PK","core","dim_sales_billing_statuses","id"
+"core","dim_sales_billing_statuses",2,"estado","character varying","varchar","YES",NULL,"","core","dim_sales_billing_statuses","estado"
+"core","dim_sales_billing_statuses",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_sales_payment_statuses",1,"id","integer","int4","NO",NULL,"PK","core","dim_sales_payment_statuses","id"
+"core","dim_sales_payment_statuses",2,"estado","character varying","varchar","YES",NULL,"","core","dim_sales_payment_statuses","estado"
+"core","dim_sales_payment_statuses",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_sales_statuses",1,"id","integer","int4","NO",NULL,"PK","core","dim_sales_statuses","id"
+"core","dim_sales_statuses",2,"estado","character varying","varchar","YES",NULL,"","core","dim_sales_statuses","estado"
+"core","dim_sales_statuses",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_salesperson_commission_bases",1,"id","integer","int4","NO",NULL,"PK","core","dim_salesperson_commission_bases","id"
+"core","dim_salesperson_commission_bases",2,"base","character varying","varchar","YES",NULL,"","core","dim_salesperson_commission_bases","base"
+"core","dim_salesperson_commission_bases",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_salesperson_contract_types",1,"id","integer","int4","NO",NULL,"PK","core","dim_salesperson_contract_types","id"
+"core","dim_salesperson_contract_types",2,"tipo","character varying","varchar","YES",NULL,"","core","dim_salesperson_contract_types","tipo"
+"core","dim_salesperson_contract_types",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_shipping_statuses",1,"id","integer","int4","NO",NULL,"PK","core","dim_shipping_statuses","id"
+"core","dim_shipping_statuses",2,"estado","character varying","varchar","YES",NULL,"","core","dim_shipping_statuses","estado"
+"core","dim_shipping_statuses",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_type_assets",1,"id","integer","int4","NO",NULL,"PK","core","dim_type_assets","id"
+"core","dim_type_assets",2,"nombre","character varying","varchar","YES",NULL,"","core","dim_type_assets","nombre"
+"core","dim_type_assets",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","dim_varieties",1,"id","integer","int4","NO",NULL,"PK","core","dim_varieties","id"
+"core","dim_varieties",2,"producto_id","integer","int4","YES",NULL,"FK","core","products","id"
+"core","dim_varieties",3,"variedad","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","dim_varieties",4,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","expenses",1,"id","integer","int4","NO",NULL,"PK","core","expenses","id"
+"core","expenses",2,"fecha","date","date","YES",NULL,"",NULL,NULL,NULL
+"core","expenses",3,"tipo_egreso_id","integer","int4","YES",NULL,"FK","core","dim_expense_types","id"
+"core","expenses",4,"tipo_economico_id","integer","int4","YES",NULL,"FK","core","dim_economic_types","id"
+"core","expenses",5,"monto","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","expenses",6,"medio_pago_id","integer","int4","YES",NULL,"FK","core","dim_payment_methods","id"
+"core","expenses",7,"activo_id","integer","int4","YES",NULL,"FK","core","assets","id"
+"core","expenses",8,"actor_id","integer","int4","YES",NULL,"FK","core","parties","id"
+"core","expenses",9,"observaciones","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","expenses",10,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","expenses",11,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","expenses",12,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","expenses",13,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","expenses",14,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","inventory_sale_assignment_lines",1,"id","bigint","int8","NO","nextval('core.inventory_sale_assignment_lines_id_seq'::regclass)","PK","core","inventory_sale_assignment_lines","id"
+"core","inventory_sale_assignment_lines",2,"assignment_id","bigint","int8","NO",NULL,"FK","core","inventory_sale_assignments","id"
+"core","inventory_sale_assignment_lines",3,"stock_id","bigint","int8","NO",NULL,"FK","core","inventory_stock_entries","id"
+"core","inventory_sale_assignment_lines",4,"kg","numeric","numeric","NO",NULL,"",NULL,NULL,NULL
+"core","inventory_sale_assignment_lines",5,"status","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"core","inventory_sale_assignment_lines",6,"created_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","inventory_sale_assignment_lines",7,"updated_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","inventory_sale_assignments",1,"id","bigint","int8","NO","nextval('core.inventory_sale_assignments_id_seq'::regclass)","PK","core","inventory_sale_assignments","id"
+"core","inventory_sale_assignments",2,"sale_item_id","bigint","int8","NO",NULL,"FK","core","sale_items","id"
+"core","inventory_sale_assignments",3,"producto_id","integer","int4","NO",NULL,"FK","core","products","id"
+"core","inventory_sale_assignments",4,"codigo_id","integer","int4","YES",NULL,"FK","core","codes","id"
+"core","inventory_sale_assignments",5,"categoria_id","integer","int4","YES",NULL,"FK","core","dim_categories","id"
+"core","inventory_sale_assignments",6,"variedad_id","integer","int4","YES",NULL,"FK","core","dim_varieties","id"
+"core","inventory_sale_assignments",7,"calibre_id","integer","int4","YES",NULL,"FK","core","dim_calibers","id"
+"core","inventory_sale_assignments",8,"required_kg","numeric","numeric","NO",NULL,"",NULL,NULL,NULL
+"core","inventory_sale_assignments",9,"assigned_kg","numeric","numeric","NO","0","",NULL,NULL,NULL
+"core","inventory_sale_assignments",10,"status","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"core","inventory_sale_assignments",11,"created_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","inventory_sale_assignments",12,"updated_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","inventory_sale_assignments",13,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_sale_assignments",14,"deleted_by_user_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_entries",1,"id","bigint","int8","NO","nextval('core.inventory_stock_entries_id_seq'::regclass)","PK","core","inventory_stock_entries","id"
+"core","inventory_stock_entries",2,"receipt_item_id","bigint","int8","NO",NULL,"FK","core","product_receipt_items","id"
+"core","inventory_stock_entries",3,"producto_id","integer","int4","NO",NULL,"FK","core","products","id"
+"core","inventory_stock_entries",4,"codigo_id","integer","int4","YES",NULL,"FK","core","codes","id"
+"core","inventory_stock_entries",5,"categoria_id","integer","int4","YES",NULL,"FK","core","dim_categories","id"
+"core","inventory_stock_entries",6,"variedad_id","integer","int4","YES",NULL,"FK","core","dim_varieties","id"
+"core","inventory_stock_entries",7,"calibre_id","integer","int4","YES",NULL,"FK","core","dim_calibers","id"
+"core","inventory_stock_entries",8,"location_kind","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_entries",9,"axis_x","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_entries",10,"axis_y","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_entries",11,"available_kg","numeric","numeric","NO","0","",NULL,NULL,NULL
+"core","inventory_stock_entries",12,"reserved_kg","numeric","numeric","NO","0","",NULL,NULL,NULL
+"core","inventory_stock_entries",13,"fecha_ingreso","date","date","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_entries",14,"created_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","inventory_stock_entries",15,"updated_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","inventory_stock_entries",16,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_entries",17,"deleted_by_user_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_movements",1,"id","bigint","int8","NO","nextval('core.inventory_stock_movements_id_seq'::regclass)","PK","core","inventory_stock_movements","id"
+"core","inventory_stock_movements",2,"stock_id","bigint","int8","YES",NULL,"FK","core","inventory_stock_entries","id"
+"core","inventory_stock_movements",3,"target_stock_id","bigint","int8","YES",NULL,"FK","core","inventory_stock_entries","id"
+"core","inventory_stock_movements",4,"receipt_item_id","bigint","int8","YES",NULL,"FK","core","product_receipt_items","id"
+"core","inventory_stock_movements",5,"sale_item_id","bigint","int8","YES",NULL,"FK","core","sale_items","id"
+"core","inventory_stock_movements",6,"loss_id","bigint","int8","YES",NULL,"FK","core","product_losses","id"
+"core","inventory_stock_movements",7,"movement_type","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_movements",8,"source_location_kind","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_movements",9,"source_axis_x","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_movements",10,"source_axis_y","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_movements",11,"target_location_kind","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_movements",12,"target_axis_x","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_movements",13,"target_axis_y","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_movements",14,"kg","numeric","numeric","NO",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_movements",15,"notes","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_movements",16,"actor_user_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","inventory_stock_movements",17,"created_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","order_items",1,"id","integer","int4","NO",NULL,"PK","core","order_items","id"
+"core","order_items",2,"pedido_id","integer","int4","YES",NULL,"FK","core","orders","id"
+"core","order_items",3,"producto_id","integer","int4","YES",NULL,"FK","core","products","id"
+"core","order_items",4,"variedad_id","integer","int4","YES",NULL,"FK","core","dim_varieties","id"
+"core","order_items",5,"categoria_id","integer","int4","YES",NULL,"FK","core","dim_categories","id"
+"core","order_items",6,"calibre_id","integer","int4","YES",NULL,"FK","core","dim_calibers","id"
+"core","order_items",7,"codigo_id","integer","int4","YES",NULL,"FK","core","codes","id"
+"core","order_items",8,"kg","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","order_items",9,"precio_unit","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","order_items",10,"precio_total","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","order_items",11,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","order_items",12,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","order_items",13,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","order_items",14,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","order_items",15,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","orders",1,"id","integer","int4","NO",NULL,"PK","core","orders","id"
+"core","orders",2,"fecha","date","date","YES",NULL,"",NULL,NULL,NULL
+"core","orders",3,"cliente_id","integer","int4","YES",NULL,"FK","core","parties_customer","tercero_id"
+"core","orders",4,"destinatario_id","integer","int4","YES",NULL,"FK","core","parties_recipient","tercero_id"
+"core","orders",5,"estado_id","integer","int4","YES",NULL,"FK","core","dim_order_statuses","id"
+"core","orders",6,"observaciones","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","orders",7,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","orders",8,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","orders",9,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","orders",10,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","orders",11,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","parties",1,"id","integer","int4","NO",NULL,"PK","core","parties","id"
+"core","parties",2,"rut","character varying","varchar","YES",NULL,"","core","parties","rut"
+"core","parties",3,"nombre","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","parties",4,"alias","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","parties",5,"telefono","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","parties",6,"direccion","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","parties",7,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","parties",8,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","parties",9,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","parties_customer",1,"tercero_id","integer","int4","NO",NULL,"FK","core","parties","id"
+"core","parties_customer",1,"tercero_id","integer","int4","NO",NULL,"PK","core","parties_customer","tercero_id"
+"core","parties_customer",2,"tipo_id","integer","int4","YES",NULL,"FK","core","dim_customer_types","id"
+"core","parties_customer",3,"vendedor_id","integer","int4","YES",NULL,"FK","core","parties_salesperson","tercero_id"
+"core","parties_customer",4,"factura","boolean","bool","YES","false","",NULL,NULL,NULL
+"core","parties_customer",5,"factura_despacho","boolean","bool","YES","false","",NULL,NULL,NULL
+"core","parties_customer",6,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","parties_customer",7,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","parties_employee",1,"tercero_id","integer","int4","NO",NULL,"FK","core","parties","id"
+"core","parties_employee",1,"tercero_id","integer","int4","NO",NULL,"PK","core","parties_employee","tercero_id"
+"core","parties_employee",2,"cargo","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","parties_employee",3,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","parties_employee",4,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","parties_recipient",1,"tercero_id","integer","int4","NO",NULL,"PK","core","parties_recipient","tercero_id"
+"core","parties_recipient",1,"tercero_id","integer","int4","NO",NULL,"FK","core","parties","id"
+"core","parties_recipient",2,"cliente_id","integer","int4","YES",NULL,"FK","core","parties_customer","tercero_id"
+"core","parties_recipient",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","parties_recipient",4,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","parties_recipient",5,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","parties_salesperson",1,"tercero_id","integer","int4","NO",NULL,"FK","core","parties","id"
+"core","parties_salesperson",1,"tercero_id","integer","int4","NO",NULL,"PK","core","parties_salesperson","tercero_id"
+"core","parties_salesperson",2,"modelo_comercial_id","integer","int4","YES",NULL,"FK","core","dim_commercial_models","id"
+"core","parties_salesperson",3,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","parties_salesperson",4,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","parties_salesperson",5,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","parties_supplier",1,"tercero_id","integer","int4","NO",NULL,"PK","core","parties_supplier","tercero_id"
+"core","parties_supplier",1,"tercero_id","integer","int4","NO",NULL,"FK","core","parties","id"
+"core","parties_supplier",2,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","parties_supplier",3,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","payment_applications",1,"id","integer","int4","NO",NULL,"PK","core","payment_applications","id"
+"core","payment_applications",2,"pago_id","integer","int4","YES",NULL,"FK","core","payments","id"
+"core","payment_applications",3,"venta_id","integer","int4","YES",NULL,"FK","core","sales","id"
+"core","payment_applications",4,"monto_aplicado","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","payment_applications",5,"observaciones","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","payment_applications",6,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","payment_applications",7,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","payment_applications",8,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","payment_applications",9,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","payment_applications",10,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","payments",1,"id","integer","int4","NO",NULL,"PK","core","payments","id"
+"core","payments",2,"fecha","date","date","YES",NULL,"",NULL,NULL,NULL
+"core","payments",3,"cliente_id","integer","int4","YES",NULL,"FK","core","parties_customer","tercero_id"
+"core","payments",4,"monto","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","payments",5,"medio_pago_id","integer","int4","YES",NULL,"FK","core","dim_payment_methods","id"
+"core","payments",6,"referencia","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","payments",7,"observaciones","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","payments",8,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","payments",9,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","payments",10,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","payments",11,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","payments",12,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","price_lists",1,"id","bigint","int8","NO","nextval('core.price_lists_id_seq'::regclass)","PK","core","price_lists","id"
+"core","price_lists",2,"nombre","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"core","price_lists",3,"descripcion","text","text","NO","''::text","",NULL,NULL,NULL
+"core","price_lists",4,"vigencia_desde","date","date","NO",NULL,"",NULL,NULL,NULL
+"core","price_lists",5,"vigencia_hasta","date","date","YES",NULL,"",NULL,NULL,NULL
+"core","price_lists",6,"is_active","boolean","bool","NO","true","",NULL,NULL,NULL
+"core","price_lists",7,"created_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","price_lists",8,"updated_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","price_lists",9,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","price_lists",10,"deleted_by_user_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","price_rules",1,"id","bigint","int8","NO","nextval('core.price_rules_id_seq'::regclass)","PK","core","price_rules","id"
+"core","price_rules",2,"price_list_id","bigint","int8","NO",NULL,"FK","core","price_lists","id"
+"core","price_rules",3,"producto_id","integer","int4","NO",NULL,"",NULL,NULL,NULL
+"core","price_rules",4,"categoria_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","price_rules",5,"variedad_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","price_rules",6,"calibre_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","price_rules",7,"precio","numeric","numeric","NO",NULL,"",NULL,NULL,NULL
+"core","price_rules",8,"created_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","price_rules",9,"updated_at","timestamp with time zone","timestamptz","NO","now()","",NULL,NULL,NULL
+"core","price_rules",10,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","price_rules",11,"deleted_by_user_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"core","product_losses",1,"id","integer","int4","NO",NULL,"PK","core","product_losses","id"
+"core","product_losses",2,"fecha","date","date","YES",NULL,"",NULL,NULL,NULL
+"core","product_losses",3,"codigo_id","integer","int4","YES",NULL,"FK","core","codes","id"
+"core","product_losses",4,"producto_id","integer","int4","YES",NULL,"FK","core","products","id"
+"core","product_losses",5,"variedad_id","integer","int4","YES",NULL,"FK","core","dim_varieties","id"
+"core","product_losses",6,"categoria_id","integer","int4","YES",NULL,"FK","core","dim_categories","id"
+"core","product_losses",7,"calibre_id","integer","int4","YES",NULL,"FK","core","dim_calibers","id"
+"core","product_losses",8,"kg","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","product_losses",9,"kg_ajustado","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","product_losses",10,"observaciones","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","product_losses",11,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","product_losses",12,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","product_losses",13,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","product_losses",14,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","product_losses",15,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","product_purchase_items",1,"id","integer","int4","NO",NULL,"PK","core","product_purchase_items","id"
+"core","product_purchase_items",2,"compra_id","integer","int4","YES",NULL,"FK","core","product_purchases","id"
+"core","product_purchase_items",3,"producto_id","integer","int4","YES",NULL,"FK","core","products","id"
+"core","product_purchase_items",4,"variedad_id","integer","int4","YES",NULL,"FK","core","dim_varieties","id"
+"core","product_purchase_items",5,"categoria_id","integer","int4","YES",NULL,"FK","core","dim_categories","id"
+"core","product_purchase_items",6,"calibre_id","integer","int4","YES",NULL,"FK","core","dim_calibers","id"
+"core","product_purchase_items",7,"kg","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","product_purchase_items",8,"costo_unit","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","product_purchase_items",9,"costo_unit_con_iva","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","product_purchase_items",10,"costo_total","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","product_purchase_items",11,"costo_total_con_iva","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","product_purchase_items",12,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","product_purchase_items",13,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","product_purchase_items",14,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","product_purchase_items",15,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","product_purchase_items",16,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","product_purchases",1,"id","integer","int4","NO",NULL,"PK","core","product_purchases","id"
+"core","product_purchases",2,"fecha","date","date","YES",NULL,"",NULL,NULL,NULL
+"core","product_purchases",3,"codigo_id","integer","int4","YES",NULL,"FK","core","codes","id"
+"core","product_purchases",4,"proveedor_id","integer","int4","YES",NULL,"FK","core","parties_supplier","tercero_id"
+"core","product_purchases",5,"estado_compra_id","integer","int4","YES",NULL,"FK","core","dim_purchase_statuses","id"
+"core","product_purchases",6,"observaciones","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","product_purchases",7,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","product_purchases",8,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","product_purchases",9,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","product_purchases",10,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","product_purchases",11,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","product_purchases",12,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","product_receipt_items",1,"id","integer","int4","NO",NULL,"PK","core","product_receipt_items","id"
+"core","product_receipt_items",2,"ingreso_id","integer","int4","YES",NULL,"FK","core","product_receipts","id"
+"core","product_receipt_items",3,"codigo_id","integer","int4","YES",NULL,"FK","core","codes","id"
+"core","product_receipt_items",4,"producto_id","integer","int4","YES",NULL,"FK","core","products","id"
+"core","product_receipt_items",5,"variedad_id","integer","int4","YES",NULL,"FK","core","dim_varieties","id"
+"core","product_receipt_items",6,"categoria_id","integer","int4","YES",NULL,"FK","core","dim_categories","id"
+"core","product_receipt_items",7,"calibre_id","integer","int4","YES",NULL,"FK","core","dim_calibers","id"
+"core","product_receipt_items",8,"kg","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","product_receipt_items",9,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","product_receipt_items",10,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","product_receipt_items",11,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","product_receipt_items",12,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","product_receipt_items",13,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","product_receipts",1,"id","integer","int4","NO",NULL,"PK","core","product_receipts","id"
+"core","product_receipts",2,"fecha","date","date","YES",NULL,"",NULL,NULL,NULL
+"core","product_receipts",3,"nombre_chofer","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","product_receipts",4,"observaciones","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","product_receipts",5,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","product_receipts",6,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","product_receipts",7,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","product_receipts",8,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","product_receipts",9,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","products",1,"id","integer","int4","NO",NULL,"PK","core","products","id"
+"core","products",2,"nombre","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","products",3,"unidad","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","products",4,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","products",5,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","products",6,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","purchase_payment_applications",1,"id","integer","int4","NO",NULL,"PK","core","purchase_payment_applications","id"
+"core","purchase_payment_applications",2,"compra_id","integer","int4","YES",NULL,"FK","core","product_purchases","id"
+"core","purchase_payment_applications",3,"egreso_id","integer","int4","YES",NULL,"FK","core","expenses","id"
+"core","purchase_payment_applications",4,"monto_aplicado","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","purchase_payment_applications",5,"observaciones","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","purchase_payment_applications",6,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","purchase_payment_applications",7,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","purchase_payment_applications",8,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","purchase_payment_applications",9,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","purchase_payment_applications",10,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","sale_items",1,"id","integer","int4","NO",NULL,"PK","core","sale_items","id"
+"core","sale_items",2,"venta_id","integer","int4","YES",NULL,"FK","core","sales","id"
+"core","sale_items",3,"producto_id","integer","int4","YES",NULL,"FK","core","products","id"
+"core","sale_items",4,"variedad_id","integer","int4","YES",NULL,"FK","core","dim_varieties","id"
+"core","sale_items",5,"categoria_id","integer","int4","YES",NULL,"FK","core","dim_categories","id"
+"core","sale_items",6,"calibre_id","integer","int4","YES",NULL,"FK","core","dim_calibers","id"
+"core","sale_items",7,"codigo_id","integer","int4","YES",NULL,"FK","core","codes","id"
+"core","sale_items",8,"kg","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","sale_items",9,"precio_unit","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","sale_items",10,"precio_total","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","sale_items",11,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","sale_items",12,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","sale_items",13,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","sale_items",14,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","sale_items",15,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","sales",1,"id","integer","int4","NO",NULL,"PK","core","sales","id"
+"core","sales",2,"fecha","date","date","YES",NULL,"",NULL,NULL,NULL
+"core","sales",3,"pedido_id","integer","int4","YES",NULL,"","core","sales","pedido_id"
+"core","sales",3,"pedido_id","integer","int4","YES",NULL,"FK","core","orders","id"
+"core","sales",4,"cliente_id","integer","int4","YES",NULL,"FK","core","parties_customer","tercero_id"
+"core","sales",5,"destinatario_id","integer","int4","YES",NULL,"FK","core","parties_recipient","tercero_id"
+"core","sales",6,"tipo_id","integer","int4","YES",NULL,"FK","core","dim_sale_types","id"
+"core","sales",7,"estado_venta_id","integer","int4","YES",NULL,"FK","core","dim_sales_statuses","id"
+"core","sales",8,"estado_despacho_id","integer","int4","YES",NULL,"FK","core","dim_shipping_statuses","id"
+"core","sales",9,"estado_facturacion_id","integer","int4","YES",NULL,"FK","core","dim_sales_billing_statuses","id"
+"core","sales",10,"estado_pago_id","integer","int4","YES",NULL,"FK","core","dim_sales_payment_statuses","id"
+"core","sales",11,"factura","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"core","sales",12,"observaciones","text","text","YES",NULL,"",NULL,NULL,NULL
+"core","sales",13,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","sales",14,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","sales",15,"deleted_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"core","sales",16,"deleted_by_user_id","integer","int4","YES",NULL,"FK","core","app_users","id"
+"core","sales",17,"ingest_event_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"core","salesperson_contracts",1,"id","integer","int4","NO",NULL,"PK","core","salesperson_contracts","id"
+"core","salesperson_contracts",2,"vendedor_id","integer","int4","YES",NULL,"FK","core","parties_salesperson","tercero_id"
+"core","salesperson_contracts",3,"tipo_id","integer","int4","YES",NULL,"FK","core","dim_salesperson_contract_types","id"
+"core","salesperson_contracts",4,"base_id","integer","int4","YES",NULL,"FK","core","dim_salesperson_commission_bases","id"
+"core","salesperson_contracts",5,"tasa_comision","numeric","numeric","YES",NULL,"",NULL,NULL,NULL
+"core","salesperson_contracts",6,"is_active","boolean","bool","YES","true","",NULL,NULL,NULL
+"core","salesperson_contracts",7,"created_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"core","salesperson_contracts",8,"updated_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"ingest","entity_events",1,"id","integer","int4","NO",NULL,"PK","ingest","entity_events","id"
+"ingest","entity_events",2,"ingest_event_id","integer","int4","YES",NULL,"FK","ingest","ingest_events","id"
+"ingest","entity_events",3,"event_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"ingest","entity_events",4,"entity_type_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"ingest","entity_events",5,"entity_id","integer","int4","YES",NULL,"",NULL,NULL,NULL
+"ingest","entity_events",6,"event_type_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"ingest","entity_events",7,"actor_user_id","integer","int4","YES",NULL,"FK",NULL,NULL,NULL
+"ingest","entity_events",8,"actor","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"ingest","entity_events",9,"respondent_email","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"ingest","entity_events",10,"form_timestamp","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"ingest","entity_events",11,"external_id","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"ingest","entity_events",12,"status","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"ingest","entity_events",13,"message","text","text","YES",NULL,"",NULL,NULL,NULL
+"ingest","entity_events",14,"payload","jsonb","jsonb","YES",NULL,"",NULL,NULL,NULL
+"ingest","ingest_events",1,"id","integer","int4","NO",NULL,"PK","ingest","ingest_events","id"
+"ingest","ingest_events",2,"received_at","timestamp with time zone","timestamptz","YES","CURRENT_TIMESTAMP","",NULL,NULL,NULL
+"ingest","ingest_events",3,"event_at","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"ingest","ingest_events",4,"source_system","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"ingest","ingest_events",5,"source_entity","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"ingest","ingest_events",6,"external_id","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"ingest","ingest_events",7,"idempotency_key","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"ingest","ingest_events",8,"respondent_email","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"ingest","ingest_events",9,"raw_payload","jsonb","jsonb","YES",NULL,"",NULL,NULL,NULL
+"ingest","ingest_events",10,"checksum","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"ingest","ingest_events",11,"status","character varying","varchar","YES",NULL,"",NULL,NULL,NULL
+"ingest","ingest_events",12,"error_message","text","text","YES",NULL,"",NULL,NULL,NULL
+"public","auth_group",1,"id","integer","int4","NO",NULL,"PK","public","auth_group","id"
+"public","auth_group",2,"name","character varying","varchar","NO",NULL,"","public","auth_group","name"
+"public","auth_group_permissions",1,"id","bigint","int8","NO",NULL,"PK","public","auth_group_permissions","id"
+"public","auth_group_permissions",2,"group_id","integer","int4","NO",NULL,"FK","public","auth_group","id"
+"public","auth_group_permissions",2,"group_id","integer","int4","NO",NULL,"","public","auth_group_permissions","group_id"
+"public","auth_group_permissions",2,"group_id","integer","int4","NO",NULL,"","public","auth_group_permissions","permission_id"
+"public","auth_group_permissions",3,"permission_id","integer","int4","NO",NULL,"","public","auth_group_permissions","group_id"
+"public","auth_group_permissions",3,"permission_id","integer","int4","NO",NULL,"FK","public","auth_permission","id"
+"public","auth_group_permissions",3,"permission_id","integer","int4","NO",NULL,"","public","auth_group_permissions","permission_id"
+"public","auth_permission",1,"id","integer","int4","NO",NULL,"PK","public","auth_permission","id"
+"public","auth_permission",2,"name","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"public","auth_permission",3,"content_type_id","integer","int4","NO",NULL,"FK","public","django_content_type","id"
+"public","auth_permission",3,"content_type_id","integer","int4","NO",NULL,"","public","auth_permission","codename"
+"public","auth_permission",3,"content_type_id","integer","int4","NO",NULL,"","public","auth_permission","content_type_id"
+"public","auth_permission",4,"codename","character varying","varchar","NO",NULL,"","public","auth_permission","content_type_id"
+"public","auth_permission",4,"codename","character varying","varchar","NO",NULL,"","public","auth_permission","codename"
+"public","auth_user",1,"id","integer","int4","NO",NULL,"PK","public","auth_user","id"
+"public","auth_user",2,"password","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"public","auth_user",3,"last_login","timestamp with time zone","timestamptz","YES",NULL,"",NULL,NULL,NULL
+"public","auth_user",4,"is_superuser","boolean","bool","NO",NULL,"",NULL,NULL,NULL
+"public","auth_user",5,"username","character varying","varchar","NO",NULL,"","public","auth_user","username"
+"public","auth_user",6,"first_name","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"public","auth_user",7,"last_name","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"public","auth_user",8,"email","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"public","auth_user",9,"is_staff","boolean","bool","NO",NULL,"",NULL,NULL,NULL
+"public","auth_user",10,"is_active","boolean","bool","NO",NULL,"",NULL,NULL,NULL
+"public","auth_user",11,"date_joined","timestamp with time zone","timestamptz","NO",NULL,"",NULL,NULL,NULL
+"public","auth_user_groups",1,"id","bigint","int8","NO",NULL,"PK","public","auth_user_groups","id"
+"public","auth_user_groups",2,"user_id","integer","int4","NO",NULL,"FK","public","auth_user","id"
+"public","auth_user_groups",2,"user_id","integer","int4","NO",NULL,"","public","auth_user_groups","group_id"
+"public","auth_user_groups",2,"user_id","integer","int4","NO",NULL,"","public","auth_user_groups","user_id"
+"public","auth_user_groups",3,"group_id","integer","int4","NO",NULL,"FK","public","auth_group","id"
+"public","auth_user_groups",3,"group_id","integer","int4","NO",NULL,"","public","auth_user_groups","user_id"
+"public","auth_user_groups",3,"group_id","integer","int4","NO",NULL,"","public","auth_user_groups","group_id"
+"public","auth_user_user_permissions",1,"id","bigint","int8","NO",NULL,"PK","public","auth_user_user_permissions","id"
+"public","auth_user_user_permissions",2,"user_id","integer","int4","NO",NULL,"FK","public","auth_user","id"
+"public","auth_user_user_permissions",2,"user_id","integer","int4","NO",NULL,"","public","auth_user_user_permissions","permission_id"
+"public","auth_user_user_permissions",2,"user_id","integer","int4","NO",NULL,"","public","auth_user_user_permissions","user_id"
+"public","auth_user_user_permissions",3,"permission_id","integer","int4","NO",NULL,"","public","auth_user_user_permissions","user_id"
+"public","auth_user_user_permissions",3,"permission_id","integer","int4","NO",NULL,"","public","auth_user_user_permissions","permission_id"
+"public","auth_user_user_permissions",3,"permission_id","integer","int4","NO",NULL,"FK","public","auth_permission","id"
+"public","django_admin_log",1,"id","integer","int4","NO",NULL,"PK","public","django_admin_log","id"
+"public","django_admin_log",2,"action_time","timestamp with time zone","timestamptz","NO",NULL,"",NULL,NULL,NULL
+"public","django_admin_log",3,"object_id","text","text","YES",NULL,"",NULL,NULL,NULL
+"public","django_admin_log",4,"object_repr","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"public","django_admin_log",5,"action_flag","smallint","int2","NO",NULL,"",NULL,NULL,NULL
+"public","django_admin_log",6,"change_message","text","text","NO",NULL,"",NULL,NULL,NULL
+"public","django_admin_log",7,"content_type_id","integer","int4","YES",NULL,"FK","public","django_content_type","id"
+"public","django_admin_log",8,"user_id","integer","int4","NO",NULL,"FK","public","auth_user","id"
+"public","django_content_type",1,"id","integer","int4","NO",NULL,"PK","public","django_content_type","id"
+"public","django_content_type",3,"app_label","character varying","varchar","NO",NULL,"","public","django_content_type","model"
+"public","django_content_type",3,"app_label","character varying","varchar","NO",NULL,"","public","django_content_type","app_label"
+"public","django_content_type",4,"model","character varying","varchar","NO",NULL,"","public","django_content_type","app_label"
+"public","django_content_type",4,"model","character varying","varchar","NO",NULL,"","public","django_content_type","model"
+"public","django_migrations",1,"id","bigint","int8","NO",NULL,"PK","public","django_migrations","id"
+"public","django_migrations",2,"app","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"public","django_migrations",3,"name","character varying","varchar","NO",NULL,"",NULL,NULL,NULL
+"public","django_migrations",4,"applied","timestamp with time zone","timestamptz","NO",NULL,"",NULL,NULL,NULL
+"public","django_session",1,"session_key","character varying","varchar","NO",NULL,"PK","public","django_session","session_key"
+"public","django_session",2,"session_data","text","text","NO",NULL,"",NULL,NULL,NULL
+"public","django_session",3,"expire_date","timestamp with time zone","timestamptz","NO",NULL,"",NULL,NULL,NULL

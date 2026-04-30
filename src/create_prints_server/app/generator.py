@@ -5,16 +5,16 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
 from typing import Literal
-import os
 from create_prints_server.infra.logging import get_logger
 
 from dotenv import load_dotenv
-from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
 
 from create_prints_server.config.settings import OutputConfig
-from create_prints_server.domain.orders import build_daily_orders, build_orders_structure
-from create_prints_server.infra.google_sheets import sheet_to_df
+from create_prints_server.domain.orders import build_orders_structure
+from create_prints_server.infra.documents_provider import (
+    DocumentQuery,
+    build_documents_provider,
+)
 from create_prints_server.render.guides_pdf import render_guides_pdf
 from create_prints_server.render.shipping_pdf import render_orders_pdf
 
@@ -63,13 +63,6 @@ def _dated_path(original_path: str, day: date) -> str:
     return str(p.with_name(f"{p.stem}_{stamp}{p.suffix}"))
 
 
-def _required_env(name: str) -> str:
-    value = os.getenv(name)
-    if value is None or value == "":
-        raise KeyError(f"Falta variable de entorno requerida: {name}")
-    return value
-
-
 def generate_pdfs(
     *,
     what: DocKind,
@@ -87,23 +80,11 @@ def generate_pdfs(
         GeneratedArtifacts: Paths generados y cantidad de órdenes.
 
     Raises:
-        KeyError: Si falta GOOGLE_APPLICATION_CREDENTIALS en env.
-        RuntimeError: Si hay error al leer Sheets o renderizar PDFs.
+        KeyError: Si faltan variables requeridas del proveedor activo.
+        RuntimeError: Si hay error al leer la fuente o renderizar PDFs.
         NoOrdersForDateError: Si no hay ventas para la fecha.
     """
     logger.info(f"Generación solicitada: what={what} day={day.isoformat()}")
-    sheets_cfg = {
-        "SHEETS_ID": _required_env("SHEETS_ID"),
-        "CLIENTES_SHEET": _required_env("CLIENTES_SHEET"),
-        "DESTINATARIOS_SHEET": _required_env("DESTINATARIOS_SHEET"),
-        "VENTAS_SHEET": _required_env("VENTAS_SHEET"),
-        "DETALLE_SHEET": _required_env("DETALLE_SHEET"),
-        "CLIENTES_RANGE": _required_env("CLIENTES_RANGE"),
-        "DESTINATARIOS_RANGE": _required_env("DESTINATARIOS_RANGE"),
-        "VENTAS_RANGE": _required_env("VENTAS_RANGE"),
-        "DETALLE_RANGE": _required_env("DETALLE_RANGE"),
-    }
-
     out_cfg = OutputConfig(
         pdf_orders_path=os.getenv("PDF_ORDERS_PATH", "shipping_list.pdf"),
         pdf_guides_path=os.getenv("PDF_GUIDES_PATH", "guides_list.pdf"),
@@ -130,62 +111,19 @@ def generate_pdfs(
         logo_path=out_cfg.logo_path,
     )
 
-    scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-    creds = Credentials.from_service_account_file(
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"],
-        scopes=scopes,
-    )
-    service = build("sheets", "v4", credentials=creds)
-
-    df_clientes = sheet_to_df(
-        service,
-        sheets_cfg["SHEETS_ID"],
-        sheets_cfg["CLIENTES_SHEET"],
-        sheets_cfg["CLIENTES_RANGE"],
-    )
-    df_destinatarios = sheet_to_df(
-        service,
-        sheets_cfg["SHEETS_ID"],
-        sheets_cfg["DESTINATARIOS_SHEET"],
-        sheets_cfg["DESTINATARIOS_RANGE"],
-    )
-    df_ventas = sheet_to_df(
-        service,
-        sheets_cfg["SHEETS_ID"],
-        sheets_cfg["VENTAS_SHEET"],
-        sheets_cfg["VENTAS_RANGE"],
-    )
-    df_det = sheet_to_df(
-        service,
-        sheets_cfg["SHEETS_ID"],
-        sheets_cfg["DETALLE_SHEET"],
-        sheets_cfg["DETALLE_RANGE"],
-    )
-    logger.info(
-        f"Datos leídos de Sheets: clientes={len(df_clientes)} destinatarios={len(df_destinatarios)} ventas={len(df_ventas)} detalle={len(df_det)}"
-    )
-
-    if df_clientes.empty or df_ventas.empty or df_det.empty:
-        raise RuntimeError(
-            "Alguna tabla está vacía o el rango no trae datos (CLIENTES/VENTAS/DETALLE_VENTAS)."
-        )
-
-    dt_day = datetime(day.year, day.month, day.day)
-
     allowed_types: list[str] | None = ["DESPACHO"]
     if what == "egreso":
         if not venta_id:
             raise ValueError("venta_id es requerido cuando what == 'egreso'")
         allowed_types = ["EGRESO"]
 
-    det_dia = build_daily_orders(
-        df_clientes,
-        df_destinatarios,
-        df_ventas,
-        df_det,
-        dt_day,
-        allowed_types=allowed_types,
-        venta_id=venta_id,
+    provider = build_documents_provider()
+    det_dia = provider.load_orders_frame(
+        DocumentQuery(
+            day=day,
+            allowed_types=allowed_types,
+            venta_id=venta_id,
+        )
     )
     logger.info(f"Ventas filtradas para {day.isoformat()}: {len(det_dia)} registros")
 

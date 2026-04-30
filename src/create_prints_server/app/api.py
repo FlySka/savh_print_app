@@ -5,16 +5,15 @@ from datetime import date, datetime
 from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
-import pandas as pd
-from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 
 from create_prints_server.domain.money import money_clp
-from create_prints_server.domain.orders import build_daily_orders
-from create_prints_server.infra.google_sheets import sheet_to_df
+from create_prints_server.infra.documents_provider import (
+    DocumentQuery,
+    build_documents_provider,
+)
 from printing_queue.db import get_db
 from printing_queue.infra.job_status_events import try_record_print_job_status_event
 from printing_queue.models import PrintJob, PrintJobStatus, PrintJobType
@@ -57,61 +56,6 @@ def _today_in_config_timezone() -> date:
         return datetime.now(ZoneInfo(timezone)).date()
     except Exception:
         return date.today()
-
-
-def _required_env(name: str) -> str:
-    value = os.getenv(name)
-    if value is None or value == "":
-        raise KeyError(f"Falta variable de entorno requerida: {name}")
-    return value
-
-
-def _load_sheets_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Carga dataframes desde Google Sheets usando la config de entorno."""
-    sheets_cfg = {
-        "SHEETS_ID": _required_env("SHEETS_ID"),
-        "CLIENTES_SHEET": _required_env("CLIENTES_SHEET"),
-        "DESTINATARIOS_SHEET": _required_env("DESTINATARIOS_SHEET"),
-        "VENTAS_SHEET": _required_env("VENTAS_SHEET"),
-        "DETALLE_SHEET": _required_env("DETALLE_SHEET"),
-        "CLIENTES_RANGE": _required_env("CLIENTES_RANGE"),
-        "DESTINATARIOS_RANGE": _required_env("DESTINATARIOS_RANGE"),
-        "VENTAS_RANGE": _required_env("VENTAS_RANGE"),
-        "DETALLE_RANGE": _required_env("DETALLE_RANGE"),
-    }
-
-    scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-    creds = Credentials.from_service_account_file(
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"],
-        scopes=scopes,
-    )
-    service = build("sheets", "v4", credentials=creds)
-
-    df_clientes = sheet_to_df(
-        service,
-        sheets_cfg["SHEETS_ID"],
-        sheets_cfg["CLIENTES_SHEET"],
-        sheets_cfg["CLIENTES_RANGE"],
-    )
-    df_destinatarios = sheet_to_df(
-        service,
-        sheets_cfg["SHEETS_ID"],
-        sheets_cfg["DESTINATARIOS_SHEET"],
-        sheets_cfg["DESTINATARIOS_RANGE"],
-    )
-    df_ventas = sheet_to_df(
-        service,
-        sheets_cfg["SHEETS_ID"],
-        sheets_cfg["VENTAS_SHEET"],
-        sheets_cfg["VENTAS_RANGE"],
-    )
-    df_det = sheet_to_df(
-        service,
-        sheets_cfg["SHEETS_ID"],
-        sheets_cfg["DETALLE_SHEET"],
-        sheets_cfg["DETALLE_RANGE"],
-    )
-    return df_clientes, df_destinatarios, df_ventas, df_det
 
 
 @router.get("/health")
@@ -185,16 +129,9 @@ class EgresoOption(BaseModel):
 def list_egresos(day: date | None = None) -> list[EgresoOption]:
     """Retorna ventas de tipo EGRESO para la fecha indicada."""
     target_day = day or _today_in_config_timezone()
-    dt_day = datetime(target_day.year, target_day.month, target_day.day)
-
-    df_clientes, df_destinatarios, df_ventas, df_det = _load_sheets_data()
-    det_dia = build_daily_orders(
-        df_clientes,
-        df_destinatarios,
-        df_ventas,
-        df_det,
-        pd.to_datetime(dt_day),
-        allowed_types=["EGRESO"],
+    provider = build_documents_provider()
+    det_dia = provider.load_orders_frame(
+        DocumentQuery(day=target_day, allowed_types=["EGRESO"])
     )
 
     if det_dia.empty:

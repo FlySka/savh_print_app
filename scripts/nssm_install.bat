@@ -189,7 +189,7 @@ if "%USE_VENV_PY%"=="1" (
 )
 "%NSSM_EXE%" set "%SVC_GEN%" AppDirectory "%REPO_DIR%"
 "%NSSM_EXE%" set "%SVC_GEN%" DisplayName "SAVH Print App - Worker (Generate)"
-"%NSSM_EXE%" set "%SVC_GEN%" Description "Worker de generacion de PDFs (Google Sheets -> PDFs)"
+"%NSSM_EXE%" set "%SVC_GEN%" Description "Worker de generacion de PDFs (fuente configurable -> PDFs)"
 "%NSSM_EXE%" set "%SVC_GEN%" Start SERVICE_AUTO_START
 "%NSSM_EXE%" set "%SVC_GEN%" AppStdout "%LOG_DIR%\service_generate.out.log"
 "%NSSM_EXE%" set "%SVC_GEN%" AppStderr "%LOG_DIR%\service_generate.err.log"
