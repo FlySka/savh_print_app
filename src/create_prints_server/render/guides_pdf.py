@@ -12,7 +12,6 @@ from reportlab.pdfgen import canvas
 
 from create_prints_server.domain.guides import (
     compute_order_total,
-    filter_orders_requiring_guide,
     normalize_guide_items,
     split_order_date_components,
 )
@@ -153,16 +152,16 @@ def _draw_receipt_stub(
     c.line(x, bottom, x, top)
     c.restoreState()
 
-    cursor_y = y - 11
+    cursor_y = y - 10
     c.setFont("Helvetica-Bold", 6.9)
     c.drawString(left, cursor_y, "TALON DE RECEPCION")
-    cursor_y -= 8
+    cursor_y -= 7
     c.line(left, cursor_y, right, cursor_y)
 
-    cursor_y -= 13
+    cursor_y -= 11
     c.setFont("Helvetica-Bold", 5.9)
     c.drawString(left, cursor_y, "CLIENTE")
-    cursor_y -= 9
+    cursor_y -= 7
     c.setFont("Helvetica", 6.2)
     c.drawString(
         left,
@@ -170,46 +169,50 @@ def _draw_receipt_stub(
         _fit_text(c, cliente, right - left, "Helvetica", 6.2),
     )
 
-    cursor_y -= 15
+    cursor_y -= 11
     c.setFont("Helvetica-Bold", 5.9)
     c.drawString(left, cursor_y, "FECHA")
     c.setFont("Helvetica", 6.2)
     c.drawRightString(right, cursor_y, fecha)
 
-    cursor_y -= 13
+    cursor_y -= 11
     c.setFont("Helvetica-Bold", 5.9)
     c.drawString(left, cursor_y, "KILOS")
     c.setFont("Helvetica", 6.2)
     c.drawRightString(right, cursor_y, kilos)
 
-    cursor_y -= 13
+    cursor_y -= 11
     c.setFont("Helvetica-Bold", 5.9)
     c.drawString(left, cursor_y, "TOTAL")
     c.setFont("Helvetica-Bold", 6.9)
     c.drawRightString(right, cursor_y, money_clp(total))
 
-    cursor_y -= 10
+    cursor_y -= 8
     c.line(left, cursor_y, right, cursor_y)
 
-    row_y = cursor_y - 16
+    row_y = cursor_y - 12
     c.setFont("Helvetica-Bold", 6.1)
     c.drawString(left, row_y, "CONDICION")
     c.setFont("Helvetica", 6.5)
-    next_x = _draw_checkbox(c, left + 1, row_y - 13, "PAGO", size=5.5)
-    _draw_checkbox(c, next_x, row_y - 13, "ABONO", size=5.5)
+    checkbox_y = row_y - 10
+    next_x = _draw_checkbox(c, left + 1, checkbox_y, "PAGO", size=5.3)
+    _draw_checkbox(c, next_x, checkbox_y, "ABONO", size=5.3)
 
-    row_y -= 32
+    row_y = checkbox_y - 17
     c.setFont("Helvetica-Bold", 6.1)
     c.drawString(left, row_y, "METODO DE PAGO")
     c.setFont("Helvetica", 6.3)
-    next_x = _draw_checkbox(c, left + 1, row_y - 13, "EFECTIVO", size=5.5)
-    next_x = _draw_checkbox(c, next_x, row_y - 13, "CHEQUE", size=5.5)
-    _draw_checkbox(c, next_x, row_y - 13, "OTRO", size=5.5)
+    checkbox_y = row_y - 10
+    next_x = _draw_checkbox(c, left + 1, checkbox_y, "EFECTIVO", size=5.3)
+    next_x = _draw_checkbox(c, next_x, checkbox_y, "CHEQUE", size=5.3)
+    _draw_checkbox(c, next_x, checkbox_y, "OTRO", size=5.3)
 
-    signature_label_y = bottom + 29
     signature_line_y = bottom + 15
-    monto_y = max(signature_label_y + 24, row_y - 72)
-    monto_line_x = left + 21 * mm
+    signature_label_y = signature_line_y + 12
+    # El monto vive entre los checkboxes y la firma, pero ligeramente sesgado
+    # hacia arriba para quedar visualmente mas cerca del bloque de pago.
+    monto_y = max(signature_label_y + 14, min(signature_label_y + 30, checkbox_y - 12))
+    monto_line_x = left + 16 * mm
     c.setFont("Helvetica-Bold", 7)
     c.drawString(left, monto_y, "MONTO")
     c.line(monto_line_x, monto_y - 1, right, monto_y - 1)
@@ -479,19 +482,21 @@ def render_guides_pdf(
         out (Any): Config (ver `draw_guide_block`).
         pdf_path (str): Ruta del PDF de salida.
     """
-    guides = filter_orders_requiring_guide(guides)
-
     page_w, page_h = A4
     c = canvas.Canvas(pdf_path, pagesize=A4)
 
-    margin = 12 * mm
+    top_margin = 12 * mm
+    bottom_margin = 40 * mm
     v_gap = 10 * mm
 
-    block_w = page_w - 2 * margin
-    block_h = (page_h - 2 * margin - 2 * v_gap) / 3
+    # Las guias impresas quedaban demasiado cerca del borde inferior fisico.
+    # Dejamos una franja de seguridad abajo, similar al aire que ya tiene la
+    # lista de despacho, para evitar que la tercera guia se corte al imprimir.
+    block_w = page_w - 2 * top_margin
+    block_h = (page_h - top_margin - bottom_margin - 2 * v_gap) / 3
 
-    x = margin
-    y_top = page_h - margin
+    x = top_margin
+    y_top = page_h - top_margin
     cursor_y = y_top
 
     for idx, od in enumerate(guides):

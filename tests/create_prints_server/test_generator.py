@@ -11,8 +11,11 @@ import create_prints_server.app.generator as generator
 from create_prints_server.infra.documents_provider import DocumentQuery
 
 
-def _build_orders_frame() -> pd.DataFrame:
+def _build_orders_frame(factura_despacho: bool = False) -> pd.DataFrame:
     """Construye una tabla mínima compatible con `build_orders_structure()`.
+
+    Args:
+        factura_despacho: Flag comercial heredado desde clientes.
 
     Returns:
         pd.DataFrame: DataFrame de detalle de una venta.
@@ -28,7 +31,7 @@ def _build_orders_frame() -> pd.DataFrame:
                 "direccion": "Direccion Cliente 123",
                 "destinatario": "Destinatario Uno",
                 "direccion_destinatario": "Direccion Destinatario 456",
-                "factura_despacho": False,
+                "factura_despacho": factura_despacho,
                 "producto": "Palta Hass",
                 "calibre": "18",
                 "kg": 100.0,
@@ -120,6 +123,35 @@ def test_generate_pdfs_egreso_uses_venta_id_and_creates_guide(
     assert Path(artifacts.guides_path).name == "guides_egreso_20260218.pdf"
     assert provider.queries[0].allowed_types == ["EGRESO"]
     assert provider.queries[0].venta_id == "101"
+
+
+def test_generate_pdfs_guides_keeps_orders_with_factura_despacho_true(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Verifica que las guías ya no se filtren por `factura_despacho`.
+
+    Args:
+        monkeypatch: Fixture de pytest para stubs de entorno.
+        tmp_path: Carpeta temporal para artefactos.
+    """
+
+    provider = _StubProvider(_build_orders_frame(factura_despacho=True))
+    monkeypatch.setattr(generator, "build_documents_provider", lambda: provider)
+    monkeypatch.setenv("PDF_ORDERS_PATH", str(tmp_path / "shipping_list.pdf"))
+    monkeypatch.setenv("PDF_GUIDES_PATH", str(tmp_path / "guides.pdf"))
+
+    artifacts = generator.generate_pdfs(
+        what="guides",
+        day=date(2026, 2, 18),
+    )
+
+    assert artifacts.shipping_list_path is None
+    assert artifacts.guides_path is not None
+    assert Path(artifacts.guides_path).exists()
+    assert artifacts.orders_count == 1
+    assert provider.queries[0].allowed_types == ["DESPACHO"]
+    assert provider.queries[0].venta_id is None
 
 
 def test_generate_pdfs_raises_when_provider_returns_no_orders(

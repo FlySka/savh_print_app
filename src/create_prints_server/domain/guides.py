@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import pandas as pd
 
@@ -26,53 +26,6 @@ class GuidesOutputConfig:
     contact: str
     logo_path: Optional[str] = None
     max_items: int = 8
-
-
-def should_generate_guide(factura_despacho: Any) -> bool:
-    """Determina si corresponde generar guía según el campo `factura_despacho`.
-
-    Regla:
-        - Si `factura_despacho` es TRUE => NO se genera guía.
-        - Si es FALSE (o vacío/desconocido) => SÍ se genera guía.
-
-    Args:
-        factura_despacho (Any): Valor crudo (bool/str/número) desde la tabla CLIENTES.
-
-    Returns:
-        bool: True si hay que generar guía; False en caso contrario.
-
-    """
-    parsed = _parse_bool(factura_despacho)
-    return parsed is not True
-
-
-def filter_orders_requiring_guide(
-    orders: Iterable[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
-    """Filtra órdenes dejando solo las que requieren guía.
-
-    Args:
-        orders (Iterable[Dict[str, Any]]): Órdenes con 'header' e 'items'.
-
-    Returns:
-        List[Dict[str, Any]]: Órdenes que sí requieren guía.
-    """
-    out: List[Dict[str, Any]] = []
-
-    for od in orders:
-        header = od.get("header", {}) or {}
-
-        flag = (
-            header.get("factura_despacho")
-            if "factura_despacho" in header
-            else header.get("cliente_factura_despacho", header.get("FACTURA_DESPACHO"))
-        )
-
-        if should_generate_guide(flag):
-            out.append(od)
-
-    return out
-
 
 def split_order_date_components(order_header: Dict[str, Any]) -> Tuple[str, str, str]:
     """Extrae (día, mes, año) como strings desde el header de la orden.
@@ -159,35 +112,6 @@ def normalize_guide_items(items: pd.DataFrame, max_items: int) -> pd.DataFrame:
         base["precio_unit"] = None
 
     return base[["producto", "kg", "precio_unit"]].head(int(max_items))
-
-
-def _parse_bool(value: Any) -> Optional[bool]:
-    """Parsea valores comunes a booleano.
-
-    Args:
-        value (Any): Entrada cruda.
-
-    Returns:
-        Optional[bool]: True/False si se reconoce; None si es desconocido.
-
-    """
-    if value is None:
-        return None
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, (int, float)) and not pd.isna(value):
-        if float(value) == 1.0:
-            return True
-        if float(value) == 0.0:
-            return False
-        return None
-    if isinstance(value, str):
-        v = value.strip().lower()
-        if v in {"true", "t", "1", "si", "sí", "yes", "y", "verdadero"}:
-            return True
-        if v in {"false", "f", "0", "no", "n", "falso", ""}:
-            return False
-    return None
 
 
 def _parse_date(value: Any) -> Optional[date]:
