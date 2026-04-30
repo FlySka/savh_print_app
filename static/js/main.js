@@ -11,6 +11,7 @@ const techBox = document.getElementById("techBox");
 const techSummary = document.getElementById("techSummary");
 const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
 const PRINT_COOLDOWN_SECONDS = 5;
+let notifyFallbackReported = false;
 
 function setDefaultDate() {
   const today = new Date();
@@ -30,22 +31,65 @@ function applyTheme(theme) {
   localStorage.setItem("theme", theme);
 }
 
-function show(msg) {
+function show(msg, { open = false } = {}) {
   out.style.display = "block";
   out.innerHTML = msg;
   if (techBox && techSummary) {
     techSummary.textContent = "Detalles técnicos (último job)";
-    techBox.open = false;
+    techBox.open = open;
   }
 }
 
+function initNotifications() {
+  const notifier = window.Notiflix && window.Notiflix.Notify;
+  if (!notifier) {
+    return false;
+  }
+
+  notifier.init({
+    width: "340px",
+    position: "right-top",
+    distance: "18px",
+    borderRadius: "12px",
+    cssAnimationStyle: "from-right",
+    pauseOnHover: true,
+    clickToClose: true,
+    fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+    successBackground: "#2f9e44",
+    failureBackground: "#d9485f",
+    warningBackground: "#f08c00",
+    infoBackground: "#1f6cda",
+  });
+
+  return true;
+}
+
+function notifyFallback(message, type = "info") {
+  if (!notifyFallbackReported) {
+    console.warn("Notiflix no se cargó; usando fallback visible en el panel técnico.");
+    notifyFallbackReported = true;
+  }
+
+  const prefix =
+    type === "success" ? "✅" :
+    type === "error" ? "❌" :
+    type === "warning" ? "⚠️" :
+    "ℹ️";
+
+  show(`${prefix} ${message}`, { open: true });
+}
+
 function notify(message, type = "info", timeout = 2600) {
-  if (!window.Notiflix) return;
+  const notifier = window.Notiflix && window.Notiflix.Notify;
+  if (!notifier) {
+    notifyFallback(message, type);
+    return;
+  }
   const opts = { timeout };
-  if (type === "success") return Notiflix.Notify.success(message, opts);
-  if (type === "error") return Notiflix.Notify.failure(message, opts);
-  if (type === "warning") return Notiflix.Notify.warning(message, opts);
-  return Notiflix.Notify.info(message, opts);
+  if (type === "success") return notifier.success(message, opts);
+  if (type === "error") return notifier.failure(message, opts);
+  if (type === "warning") return notifier.warning(message, opts);
+  return notifier.info(message, opts);
 }
 
 function setBusy(el, state) {
@@ -256,6 +300,9 @@ if (btnUpload) btnUpload.addEventListener("click", async () => {
 setDefaultDate();
 const savedTheme = localStorage.getItem("theme");
 applyTheme(savedTheme || (prefersDark ? "dark" : "light"));
+if (!initNotifications()) {
+  show("⚠️ No se pudo cargar Notiflix. Las notificaciones usarán el panel técnico.", { open: true });
+}
 loadEgresos();
 if (dayInput) {
   dayInput.addEventListener("change", loadEgresos);
