@@ -132,10 +132,12 @@ def test_receipt_stub_keeps_amount_between_checkboxes_and_signature() -> None:
 
     monto_y = next(y for text, _x, y in text_positions if text == "MONTO")
     signature_y = next(y for text, _x, y in text_positions if text == "RECIBE CONFORME")
+    labels = {text for text, _x, _y in text_positions}
     checkbox_bottoms = [
         y for _x, y, w, h in rects if w == pytest.approx(5.3) and h == pytest.approx(5.3)
     ]
 
+    assert {"PAGO", "ABONO", "DEBE"}.issubset(labels)
     assert checkbox_bottoms
     gap_to_checkboxes = min(checkbox_bottoms) - monto_y
     gap_to_signature = monto_y - signature_y

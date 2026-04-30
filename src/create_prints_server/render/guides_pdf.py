@@ -196,7 +196,8 @@ def _draw_receipt_stub(
     c.setFont("Helvetica", 6.5)
     checkbox_y = row_y - 10
     next_x = _draw_checkbox(c, left + 1, checkbox_y, "PAGO", size=5.3)
-    _draw_checkbox(c, next_x, checkbox_y, "ABONO", size=5.3)
+    next_x = _draw_checkbox(c, next_x, checkbox_y, "ABONO", size=5.3)
+    _draw_checkbox(c, next_x, checkbox_y, "DEBE", size=5.3)
 
     row_y = checkbox_y - 17
     c.setFont("Helvetica-Bold", 6.1)
