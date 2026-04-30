@@ -23,6 +23,9 @@ DocKind = Literal["shipping_list", "guides", "both", "egreso"]
 load_dotenv()
 logger = get_logger(__name__)
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+DEFAULT_LOGO_PATH = REPO_ROOT / "static" / "images" / "logo_sinfondo.png"
+
 
 @dataclass(frozen=True)
 class GeneratedArtifacts:
@@ -41,6 +44,20 @@ class GeneratedArtifacts:
 
 class NoOrdersForDateError(RuntimeError):
     """Error cuando no hay pedidos para la fecha solicitada."""
+
+
+def _resolve_logo_path() -> str | None:
+    """Resuelve la ruta al logo para PDFs.
+
+    Returns:
+        str | None: Ruta configurada o el logo por defecto del repositorio.
+    """
+    configured = os.getenv("LOGO_PATH") or None
+    if configured:
+        return configured
+    if DEFAULT_LOGO_PATH.exists():
+        return str(DEFAULT_LOGO_PATH)
+    return None
 
 
 def _dated_path(original_path: str, day: date) -> str:
@@ -92,7 +109,7 @@ def generate_pdfs(
         subtitle=os.getenv("SUBTITLE", "Bodega Los Pinos"),
         max_items=int(os.getenv("MAX_ITEMS", "5")),
         contact=os.getenv("CONTACT", "Contacto: +56 9 1234 5678"),
-        logo_path=os.getenv("LOGO_PATH") or None,
+        logo_path=_resolve_logo_path(),
     )
 
     # Ajusta nombres de archivo por fecha y, si es egreso, cambia nombre base de guías.

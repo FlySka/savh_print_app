@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 import pandas as pd
+from PIL import Image
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -16,6 +17,226 @@ from create_prints_server.domain.guides import (
     split_order_date_components,
 )
 from create_prints_server.domain.money import money_clp
+
+
+def _fit_text(
+    c: canvas.Canvas,
+    text: str,
+    max_width: float,
+    font_name: str,
+    font_size: float,
+) -> str:
+    """Ajusta un texto al ancho disponible usando truncado.
+
+    Args:
+        c (canvas.Canvas): Canvas activo.
+        text (str): Texto original.
+        max_width (float): Ancho máximo disponible.
+        font_name (str): Fuente a medir.
+        font_size (float): Tamaño de fuente a medir.
+
+    Returns:
+        str: Texto original o truncado con sufijo `...`.
+    """
+    raw = str(text or "")
+    if not raw or max_width <= 0:
+        return ""
+
+    if c.stringWidth(raw, font_name, font_size) <= max_width:
+        return raw
+
+    suffix = "..."
+    suffix_w = c.stringWidth(suffix, font_name, font_size)
+    if suffix_w >= max_width:
+        return suffix
+
+    trimmed = raw
+    while trimmed and c.stringWidth(trimmed, font_name, font_size) + suffix_w > max_width:
+        trimmed = trimmed[:-1]
+
+    return f"{trimmed.rstrip()}{suffix}"
+
+
+def _format_total_kilos(items: pd.DataFrame) -> str:
+    """Calcula el total de kilos para el resumen visible del talón.
+
+    Args:
+        items (pd.DataFrame): Ítems de la guía.
+
+    Returns:
+        str: Total de kilos formateado o cadena vacía si no aplica.
+    """
+    if items.empty or "kg" not in items:
+        return ""
+
+    kilos = pd.to_numeric(items["kg"], errors="coerce")
+    if not kilos.notna().any():
+        return ""
+
+    total_kilos = float(kilos.fillna(0).sum())
+    if total_kilos.is_integer():
+        return f"{int(total_kilos)}"
+    return f"{total_kilos:.1f}"
+
+
+def _draw_checkbox(
+    c: canvas.Canvas,
+    x: float,
+    y: float,
+    label: str,
+    size: float = 7,
+) -> float:
+    """Dibuja un checkbox con label y retorna la siguiente X sugerida.
+
+    Args:
+        c (canvas.Canvas): Canvas activo.
+        x (float): Coordenada X inicial.
+        y (float): Línea base visual del rótulo.
+        label (str): Texto del checkbox.
+        size (float): Tamaño del cuadrado en puntos.
+
+    Returns:
+        float: Posición X sugerida para el siguiente elemento.
+    """
+    font_name = getattr(c, "_fontname", "Helvetica")
+    font_size = float(getattr(c, "_fontsize", 7) or 7)
+    box_bottom = y - size + 1
+
+    c.rect(x, box_bottom, size, size, stroke=1, fill=0)
+    c.drawString(x + size + 3, box_bottom + 0.2, label)
+    return x + size + 3 + c.stringWidth(label, font_name, font_size) + 14
+
+
+def _draw_receipt_stub(
+    c: canvas.Canvas,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    order_header: Dict[str, Any],
+    items: pd.DataFrame,
+    total: float,
+) -> None:
+    """Dibuja el talón recortable lateral de recepción y pago.
+
+    Args:
+        c (canvas.Canvas): Canvas activo.
+        x (float): Coordenada X izquierda del talón.
+        y (float): Coordenada Y superior del bloque completo.
+        w (float): Ancho reservado para el talón.
+        h (float): Alto reservado para el talón.
+        order_header (Dict[str, Any]): Cabecera resumida del documento.
+        items (pd.DataFrame): Ítems asociados a la guía.
+        total (float): Total monetario del documento.
+    """
+    pad = 6
+    left = x + pad
+    right = x + w - pad
+    top = y - pad
+    bottom = y - h + pad
+
+    dd, mm_, yyyy = split_order_date_components(order_header)
+    cliente = (
+        order_header.get("cliente_nombre", "")
+        or order_header.get("cliente", "")
+        or ""
+    )
+    fecha = "/".join(
+        part
+        for part in [dd, mm_, yyyy[-4:] if yyyy else ""]
+        if part
+    )
+    kilos = _format_total_kilos(items)
+
+    c.saveState()
+    c.setDash(5, 3)
+    c.line(x, bottom, x, top)
+    c.restoreState()
+
+    cursor_y = y - 11
+    c.setFont("Helvetica-Bold", 6.9)
+    c.drawString(left, cursor_y, "TALON DE RECEPCION")
+    cursor_y -= 8
+    c.line(left, cursor_y, right, cursor_y)
+
+    cursor_y -= 13
+    c.setFont("Helvetica-Bold", 5.9)
+    c.drawString(left, cursor_y, "CLIENTE")
+    cursor_y -= 9
+    c.setFont("Helvetica", 6.2)
+    c.drawString(
+        left,
+        cursor_y,
+        _fit_text(c, cliente, right - left, "Helvetica", 6.2),
+    )
+
+    cursor_y -= 15
+    c.setFont("Helvetica-Bold", 5.9)
+    c.drawString(left, cursor_y, "FECHA")
+    c.setFont("Helvetica", 6.2)
+    c.drawRightString(right, cursor_y, fecha)
+
+    cursor_y -= 13
+    c.setFont("Helvetica-Bold", 5.9)
+    c.drawString(left, cursor_y, "KILOS")
+    c.setFont("Helvetica", 6.2)
+    c.drawRightString(right, cursor_y, kilos)
+
+    cursor_y -= 13
+    c.setFont("Helvetica-Bold", 5.9)
+    c.drawString(left, cursor_y, "TOTAL")
+    c.setFont("Helvetica-Bold", 6.9)
+    c.drawRightString(right, cursor_y, money_clp(total))
+
+    cursor_y -= 10
+    c.line(left, cursor_y, right, cursor_y)
+
+    row_y = cursor_y - 16
+    c.setFont("Helvetica-Bold", 6.1)
+    c.drawString(left, row_y, "CONDICION")
+    c.setFont("Helvetica", 6.5)
+    next_x = _draw_checkbox(c, left + 1, row_y - 13, "PAGO", size=5.5)
+    _draw_checkbox(c, next_x, row_y - 13, "ABONO", size=5.5)
+
+    row_y -= 32
+    c.setFont("Helvetica-Bold", 6.1)
+    c.drawString(left, row_y, "METODO DE PAGO")
+    c.setFont("Helvetica", 6.3)
+    next_x = _draw_checkbox(c, left + 1, row_y - 13, "EFECTIVO", size=5.5)
+    next_x = _draw_checkbox(c, next_x, row_y - 13, "CHEQUE", size=5.5)
+    _draw_checkbox(c, next_x, row_y - 13, "OTRO", size=5.5)
+
+    signature_label_y = bottom + 29
+    signature_line_y = bottom + 15
+    monto_y = max(signature_label_y + 24, row_y - 72)
+    monto_line_x = left + 21 * mm
+    c.setFont("Helvetica-Bold", 7)
+    c.drawString(left, monto_y, "MONTO")
+    c.line(monto_line_x, monto_y - 1, right, monto_y - 1)
+
+    c.setFont("Helvetica-Bold", 7)
+    c.drawString(left, signature_label_y, "RECIBE CONFORME")
+    c.line(left, signature_line_y, right, signature_line_y)
+    c.setFont("Helvetica", 6.1)
+    c.drawString(left, bottom + 6, "Firma y nombre")
+
+
+def _load_logo_image(logo_path: str) -> Image.Image:
+    """Carga el logo y recorta el margen transparente del PNG.
+
+    Args:
+        logo_path (str): Ruta al archivo del logo.
+
+    Returns:
+        Image.Image: Imagen lista para ser escalada.
+    """
+    pil_image = Image.open(logo_path).convert("RGBA")
+    alpha = pil_image.getchannel("A")
+    alpha_mask = alpha.point(lambda value: 255 if value >= 8 else 0)
+    bbox = alpha_mask.getbbox()
+    if bbox:
+        return pil_image.crop(bbox)
+    return pil_image
 
 
 def draw_guide_block(
@@ -34,7 +255,7 @@ def draw_guide_block(
     Cambios vs versión anterior:
         - Se elimina texto de empresa/subtítulo.
         - Se dibuja el logo arriba a la derecha (como guía física).
-        - Se mantiene footer reservado para Total + Firma + Contacto.
+        - El talón recortable pasa al lateral derecho para no quitar alto útil.
 
     Args:
         c (canvas.Canvas): Canvas reportlab.
@@ -46,8 +267,8 @@ def draw_guide_block(
         order_header (Dict[str, Any]): Header de la orden.
         items (pd.DataFrame): Ítems de la orden.
     """
-    pad = 5
-    line = 11
+    pad = 4
+    line = 9.5
 
     contact = getattr(out, "contact", "")
     logo_path = getattr(out, "logo_path", None)
@@ -64,88 +285,104 @@ def draw_guide_block(
     total = compute_order_total(order_header, items)
 
     bottom = y - h
-
-    # Footer reservado (fijo): evita pisarse con tabla
-    sig_y = bottom + 5 * mm
-    total_y = bottom + 11 * mm
-    footer_top = bottom + 16 * mm
+    stub_w = min(max(56 * mm, w * 0.32), w * 0.36)
+    main_w = w - stub_w
+    main_right = x + main_w
+    sig_y = bottom + 16
+    total_y = bottom + 28
+    footer_top = bottom + 34
 
     # Marco exterior
     c.setStrokeColor(colors.black)
     c.rect(x, y - h, w, h, stroke=1, fill=0)
 
     # Header superior: título a la izquierda + logo a la derecha
-    c.setFont("Helvetica-Bold", 10)
-    c.drawString(x + pad, y - 16, guide_title)
+    c.setFont("Helvetica-Bold", 9.5)
+    c.drawString(x + pad, y - 14, guide_title)
 
-    # ✅ Logo en vez de title/subtitle
     if logo_path:
-        # Similar a guía física: más grande que antes y más arriba
+        title_right = x + pad + c.stringWidth(guide_title, "Helvetica-Bold", 9.5)
+        logo_right = main_right - pad - 2
+        logo_left = title_right + 10
+        logo_max_w = max(0, min(46 * mm, logo_right - logo_left))
         _draw_logo_safe(
             c=c,
             logo_path=str(logo_path),
-            x=x + w - 25 * mm,
-            y=y - 5,          # y es top del bloque, -10 lo deja dentro del header
-            max_w=40 * mm,
-            max_h=10 * mm,
+            x=logo_right,
+            y=y - 3,
+            max_w=logo_max_w,
+            max_h=9 * mm,
+            align_right=True,
         )
 
     # Línea separadora del header
-    c.line(x, y - 34, x + w, y - 34)
+    c.line(x, y - 30, main_right - 6, y - 30)
 
     label_x = x + pad
-    row_y = y - 48
+    row_y = y - 42
+    text_value_x = label_x + 55
+    text_max_w = main_right - text_value_x - pad
 
-    # Fecha / RUT
-    c.setFont("Helvetica-Bold", 8)
+    c.setFont("Helvetica-Bold", 7.4)
     c.drawString(label_x, row_y, "DIA")
-    c.setFont("Helvetica", 8)
+    c.setFont("Helvetica", 7.4)
     c.drawString(label_x + 18, row_y, dd)
 
-    c.setFont("Helvetica-Bold", 8)
+    c.setFont("Helvetica-Bold", 7.4)
     c.drawString(label_x + 45, row_y, "MES")
-    c.setFont("Helvetica", 8)
+    c.setFont("Helvetica", 7.4)
     c.drawString(label_x + 70, row_y, mm_)
 
-    c.setFont("Helvetica-Bold", 8)
+    c.setFont("Helvetica-Bold", 7.4)
     c.drawString(label_x + 95, row_y, "AÑO")
-    c.setFont("Helvetica", 8)
+    c.setFont("Helvetica", 7.4)
     c.drawString(label_x + 120, row_y, yyyy[-4:] if yyyy else "")
 
-    # Cliente / Dirección
     row_y -= line
-    c.setFont("Helvetica-Bold", 8)
+    c.setFont("Helvetica-Bold", 7.4)
     c.drawString(label_x, row_y, "CLIENTE")
-    c.setFont("Helvetica", 8)
-    c.drawString(label_x + 55, row_y, str(cliente)[:55])
+    c.setFont("Helvetica", 7.4)
+    c.drawString(
+        text_value_x,
+        row_y,
+        _fit_text(c, cliente, text_max_w, "Helvetica", 7.4),
+    )
 
     row_y -= line
-    c.setFont("Helvetica-Bold", 8)
+    c.setFont("Helvetica-Bold", 7.4)
     c.drawString(label_x, row_y, "DIRECCION")
-    c.setFont("Helvetica", 7)
-    c.drawString(label_x + 55, row_y, str(direccion)[:75])
+    c.setFont("Helvetica", 6.6)
+    c.drawString(
+        text_value_x,
+        row_y,
+        _fit_text(c, direccion, text_max_w, "Helvetica", 6.6),
+    )
 
-    # Texto de conformidad
-    row_y -= 14
-    c.setFont("Helvetica-Bold", 7.5)
+    row_y -= 11
+    c.setFont("Helvetica-Bold", 7)
     c.drawString(
         x + pad,
         row_y,
-        "SIRVANSE RECIBIR LO SIGUIENTE EN BUENAS CONDICIONES, QUEDANDO CONFORME",
+        _fit_text(
+            c,
+            "SIRVANSE RECIBIR LO SIGUIENTE EN BUENAS CONDICIONES, QUEDANDO CONFORME",
+            main_w - 2 * pad,
+            "Helvetica-Bold",
+            7,
+        ),
     )
 
-    # Tabla (top dinámico, bottom reservado por footer)
-    row_y -= 6
+    row_y -= 5
     table_top = row_y
-    table_bottom = max(footer_top, bottom + pad)
+    table_footer_gap = 10
+    table_bottom = footer_top + table_footer_gap
 
     table_h = table_top - table_bottom
-    if table_h < 20 * mm:
-        table_h = max(16 * mm, table_h)
+    if table_h < 17 * mm:
+        table_h = max(14 * mm, table_h)
         table_bottom = table_top - table_h
 
-    # Ajuste filas si queda apretado
-    header_inner_h = 14
+    header_inner_h = 13
     min_row_h_pt = 8.5
     n_rows = max_items
     if table_h > header_inner_h:
@@ -156,30 +393,31 @@ def draw_guide_block(
     items_n = normalize_guide_items(items, max_items=n_rows)
 
     col1 = x + pad
-    col2 = x + w * 0.65
-    col3 = x + w * 0.80
-    col4 = x + w - pad
+    inner_table_w = main_w - 2 * pad
+    col2 = col1 + inner_table_w * 0.63
+    col3 = col1 + inner_table_w * 0.80
+    col4 = main_right - pad
 
     c.setStrokeColor(colors.black)
-    c.rect(x + pad, table_bottom, w - 2 * pad, table_h, stroke=1, fill=0)
+    c.rect(x + pad, table_bottom, inner_table_w, table_h, stroke=1, fill=0)
     c.line(col2, table_bottom, col2, table_top)
     c.line(col3, table_bottom, col3, table_top)
 
-    c.setFont("Helvetica-Bold", 8)
-    c.drawString(col1 + 2, table_top - 12, "Producto")
-    c.drawRightString(col3 - 4, table_top - 12, "Kilos")
-    c.drawRightString(col4 - 2, table_top - 12, "Precio Unitario")
+    c.setFont("Helvetica-Bold", 7.2)
+    c.drawString(col1 + 2, table_top - 10, "Producto")
+    c.drawRightString(col3 - 4, table_top - 10, "Kilos")
+    c.drawRightString(col4 - 2, table_top - 10, "Precio Unitario")
 
-    c.line(x + pad, table_top - 16, x + w - pad, table_top - 16)
+    c.line(x + pad, table_top - 14, main_right - pad, table_top - 14)
 
-    row_h = (table_h - 16) / max(1, n_rows)
-    start_y = table_top - 16
+    row_h = (table_h - 14) / max(1, n_rows)
+    start_y = table_top - 14
 
-    c.setFont("Helvetica", 8)
+    c.setFont("Helvetica", 7)
     for i in range(n_rows):
         y_i = start_y - (i + 1) * row_h
         c.setStrokeColor(colors.black)
-        c.line(x + pad, y_i, x + w - pad, y_i)
+        c.line(x + pad, y_i, main_right - pad, y_i)
         c.setStrokeColor(colors.black)
 
         if i < len(items_n):
@@ -195,28 +433,36 @@ def draw_guide_block(
                 except Exception:
                     kg_s = str(kg)
 
-            c.drawString(col1 + 2, y_i + row_h * 0.28, prod[:48])
-            c.drawRightString(col3 - 4, y_i + row_h * 0.28, kg_s)
-            c.drawRightString(col4 - 2, y_i + row_h * 0.28, money_clp(pu))
+            row_text_y = y_i + row_h * 0.24
+            c.drawString(
+                col1 + 2,
+                row_text_y,
+                _fit_text(c, prod, col2 - col1 - 6, "Helvetica", 7),
+            )
+            c.drawRightString(col3 - 4, row_text_y, kg_s)
+            c.drawRightString(col4 - 2, row_text_y, money_clp(pu))
 
-    # Total (siempre arriba del footer)
-    c.setFont("Helvetica-Bold", 9)
+    c.setFont("Helvetica-Bold", 8.2)
     c.drawString(x + pad, total_y, "Total")
-    c.drawRightString(x + w - pad, total_y, money_clp(total))
+    c.drawRightString(main_right - pad, total_y, money_clp(total))
 
-    # Firma + Contacto al mismo nivel (texto debajo de la línea)
-    c.setFont("Helvetica", 7.5)
-
-    # Línea de firma
+    c.setFont("Helvetica", 6.8)
     line_y = sig_y
-    c.line(x + pad, line_y, x + 70 * mm, line_y)
-
-    # Texto bajo la línea
-    text_y = line_y - 9  # ajuste fino visual
+    c.line(x + pad, line_y, x + pad + (main_w - 2 * pad) * 0.55, line_y)
+    text_y = line_y - 7
     c.drawString(x + pad, text_y, "FIRMA DEL DESPACHADOR")
+    c.drawRightString(main_right - pad, text_y, str(contact))
 
-    # Contacto al mismo nivel que el texto (derecha)
-    c.drawRightString(x + w - pad, text_y, str(contact))
+    _draw_receipt_stub(
+        c,
+        main_right,
+        y,
+        stub_w,
+        h,
+        order_header=order_header,
+        items=items,
+        total=total,
+    )
 
 
 
@@ -293,6 +539,7 @@ def _draw_logo_safe(
     y: float,
     max_w: float,
     max_h: float,
+    align_right: bool = False,
 ):
     """Dibuja el logo si existe, sin romper el render si falla.
 
@@ -303,20 +550,23 @@ def _draw_logo_safe(
         y (float): Y superior-izq aproximado.
         max_w (float): Ancho máximo.
         max_h (float): Alto máximo.
+        align_right (bool): Si es `True`, `x` se interpreta como borde derecho.
     """
     try:
-        img = ImageReader(logo_path)
-        iw, ih = img.getSize()
+        pil_image = _load_logo_image(logo_path)
+        img = ImageReader(pil_image)
+        iw, ih = pil_image.size
         if iw <= 0 or ih <= 0:
             return
 
         scale = min(max_w / float(iw), max_h / float(ih))
         w = float(iw) * scale
         h = float(ih) * scale
+        draw_x = x - w if align_right else x
 
         c.drawImage(
             img,
-            x,
+            draw_x,
             y - h,
             width=w,
             height=h,

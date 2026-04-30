@@ -293,6 +293,8 @@ No pases a NSSM hasta que puedas marcar todo esto:
 - `GET /api/egresos` responde correctamente para la fuente configurada.
 - un job `what=both` genera PDFs reales.
 - un job `what=egreso` genera su guía puntual.
+- la guía de despacho y la guía de egreso mantienen `3 por hoja` y el talón recortable inferior se ve legible al 100%.
+- el talón recortable tiene espacio útil para escritura manual en `RECIBE CONFORME`, checkboxes de pago y línea de `MONTO`.
 - si vas a imprimir en producción, al menos un job llega a `done` con `print_worker` real.
 - no quedan errores en logs de arranque.
 - `.env` final está validado en el mismo host Windows donde luego se instalará NSSM.
